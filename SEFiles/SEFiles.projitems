@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>ca4482e6-021f-4bc3-b8e7-c18853d10500</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>SEFiles</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)Sandbox.Common.dll" />
+    <None Include="$(MSBuildThisFileDirectory)Sandbox.Game.dll" />
+    <None Include="$(MSBuildThisFileDirectory)Sandbox.Graphics.dll" />
+    <None Include="$(MSBuildThisFileDirectory)SpaceEngineers.Game.dll" />
+    <None Include="$(MSBuildThisFileDirectory)SpaceEngineers.ObjectBuilders.dll" />
+    <None Include="$(MSBuildThisFileDirectory)VRage.Audio.dll" />
+    <None Include="$(MSBuildThisFileDirectory)VRage.dll" />
+    <None Include="$(MSBuildThisFileDirectory)VRage.Game.dll" />
+    <None Include="$(MSBuildThisFileDirectory)VRage.Input.dll" />
+    <None Include="$(MSBuildThisFileDirectory)VRage.Library.dll" />
+    <None Include="$(MSBuildThisFileDirectory)VRage.Math.dll" />
+    <None Include="$(MSBuildThisFileDirectory)VRage.Render.dll" />
+    <None Include="$(MSBuildThisFileDirectory)VRage.Render11.dll" />
+    <None Include="$(MSBuildThisFileDirectory)VRage.Scripting.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="$(MSBuildThisFileDirectory)PutGameDllsHere.txt" />
+  </ItemGroup>
+</Project>
