@@ -1,12 +1,12 @@
-﻿using Sandbox.ModAPI.Ingame;
+﻿using PBScripts._HelperMethods;
+using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using VRageMath;
 
 namespace PBScripts.LcdApplyProperty
 {
-    internal class Program : MyGridProgram
+    internal class Program : GridProgramHelper
     {
         // Run
 
@@ -99,14 +99,6 @@ namespace PBScripts.LcdApplyProperty
         {
             try { panel.BackgroundColor = ToColor(colorHex); }
             catch { Echo($"Failed: BackgroundColor-{colorHex}"); }
-        }
-
-        private static Color ToColor(string hex)
-        {
-            return new Color(
-                byte.Parse(hex.Substring(1, 2), System.Globalization.NumberStyles.HexNumber),
-                byte.Parse(hex.Substring(3, 2), System.Globalization.NumberStyles.HexNumber),
-                byte.Parse(hex.Substring(5, 2), System.Globalization.NumberStyles.HexNumber));
         }
 
         // Storage
