@@ -5,7 +5,7 @@ namespace PBScripts._HelperMethods
 {
     // Base class for adding shared helper methods.
     // Copy respective helper methods to PBs as required.
-    internal partial class GridProgramHelper : MyGridProgram
+    internal partial class SEProgramBase : MyGridProgram
     {
         protected static Color ToColor(string hex)
         {
