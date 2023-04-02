@@ -42,17 +42,6 @@ namespace PBScripts.SmartAirVents
             Echo(_active.Count.ToString());
         }
 
-        private void RunCoroutine(ref IEnumerator<bool> enumerator, Func<IEnumerator<bool>> enumeratorFactory)
-        {
-            if (enumerator == null)
-                enumerator = enumeratorFactory();
-            else if (!enumerator.MoveNext())
-            {
-                enumerator.Dispose();
-                enumerator = null;
-            }
-        }
-
         // Polling
 
         private IEnumerator<bool> _pollTask = null;
