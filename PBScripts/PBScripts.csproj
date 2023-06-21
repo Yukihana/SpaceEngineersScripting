@@ -9,6 +9,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="_HelperMethods\SEProgramBase.GetPolledData.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="_HelperMethods\SEProgramBase.GetPolledData.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="Sandbox.Common">
       <HintPath>..\SEFiles\Sandbox.Common.dll</HintPath>
     </Reference>

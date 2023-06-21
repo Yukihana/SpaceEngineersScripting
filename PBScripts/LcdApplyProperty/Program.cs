@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace PBScripts.LcdApplyProperty
 {
-    internal class Program : GridProgramHelper
+    internal class Program : SEProgramBase
     {
         // Run
 

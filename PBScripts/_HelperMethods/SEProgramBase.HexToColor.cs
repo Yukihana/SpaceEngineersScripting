@@ -1,13 +1,8 @@
-﻿using Sandbox.ModAPI.Ingame;
-using System;
-using System.Collections.Generic;
-using VRageMath;
+﻿using VRageMath;
 
 namespace PBScripts._HelperMethods
 {
-    // Base class for adding shared helper methods.
-    // Copy respective helper methods to PBs as required.
-    internal partial class SEProgramBase : MyGridProgram
+    internal partial class SEProgramBase
     {
         protected static Color ToColor(string hex)
         {

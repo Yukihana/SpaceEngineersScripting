@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace PBScripts.AirlockSwitch
 {
-    internal class Program : GridProgramHelper
+    internal class Program : SEProgramBase
     {
         public Program()
         {
@@ -23,7 +23,7 @@ namespace PBScripts.AirlockSwitch
         {
             if (updateSource == UpdateType.Trigger)
             {
-                string[] args = argument.Split(':', StringSplitOptions.RemoveEmptyEntries);
+                string[] args = argument.Split(new char[] { ':' }, StringSplitOptions.RemoveEmptyEntries);
                 if (args.Length < 2)
                     return;
 
@@ -165,13 +165,14 @@ namespace PBScripts.AirlockSwitch
             // enable buttons, sensor
 
             // Ensure player has moved out of sensor area
-            if (inputsensors[0].)
+            if (inputsensors[0].DetectPlayers)
+                yield return 1;
 
-                // Update state
-                if (egress)
-                    _egressed.Add(scopeId);
-                else
-                    _egressed.Remove(scopeId);
+            // Update state
+            if (egress)
+                _egressed.Add(scopeId);
+            else
+                _egressed.Remove(scopeId);
             yield return 1;
 
             // Restore inputs functionality

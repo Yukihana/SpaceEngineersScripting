@@ -1,6 +1,8 @@
 ﻿using PBScripts._HelperMethods;
 using Sandbox.ModAPI.Ingame;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace PBScripts.SmartJumpDriveCharging
 {
@@ -9,17 +11,21 @@ namespace PBScripts.SmartJumpDriveCharging
         private const float _stopChargingBelow = 0.75f;
         private const float _startChargingAbove = 0.95f;
         private const uint _delayMultiplier = 60;
-        private uint _delayCounter = 60;
-        private string _echoString = "Waiting... ";
+        private uint _delayCounter;
+        private string _echoString = "Starting up... ";
 
         private Program()
         {
             Runtime.UpdateFrequency = UpdateFrequency.Update100;
+
+            // Ensure routine is executed on first run
+            _delayCounter = _delayMultiplier;
         }
 
         public void Main()
         {
             RunCoroutine(ref _jumpDriveChargeControl, PollAutoBatteries);
+            _delayCounter++;
             Echo($"{_echoString} ({_delayCounter})");
         }
 
@@ -30,25 +36,24 @@ namespace PBScripts.SmartJumpDriveCharging
         private IEnumerator<bool> PollAutoBatteries()
         {
             // Delay
-
-            _delayCounter = 0;
             while (_delayCounter < _delayMultiplier)
-            {
-                _delayCounter++;
                 yield return false;
-            }
+            _delayCounter = 0;
 
-            // Get batteries
+            // Get all batteries
+            var batteriesRaw = new List<IMyBatteryBlock>();
+            GridTerminalSystem.GetBlocksOfType(batteriesRaw);
+            yield return true;
 
-            var batteries = new List<IMyBatteryBlock>();
-            GridTerminalSystem.GetBlocksOfType(batteries, x
-                => x.Enabled &&
-                x.ChargeMode == ChargeMode.Auto &&
-                x.OwnerId == Me.OwnerId);
+            // Pick relevant blocks
+            var batteries = batteriesRaw.Where(x
+                => x.OwnerId == Me.OwnerId &&
+                x.IsFunctional && x.Enabled &&
+                x.ChargeMode == ChargeMode.Auto)
+                .ToHashSet();
             yield return true;
 
             // Assess batteries
-
             double totalCharge = 0;
             double currentCharge = 0;
             foreach (var battery in batteries)
@@ -59,26 +64,29 @@ namespace PBScripts.SmartJumpDriveCharging
             double storedRatio = currentCharge / totalCharge;
 
             // Bail if inside no-change zone
-
             if (storedRatio > _stopChargingBelow && storedRatio < _startChargingAbove)
                 yield break;
             yield return true;
 
             // Get jumpdrives
+            var jumpDrivesRaw = new List<IMyJumpDrive>();
+            GridTerminalSystem.GetBlocksOfType(jumpDrivesRaw);
+            yield return true;
 
-            var jumpDrives = new List<IMyJumpDrive>();
-            GridTerminalSystem.GetBlocksOfType(jumpDrives, x
-                => x.CubeGrid == Me.CubeGrid &&
-                x.OwnerId == Me.OwnerId &&
-                x.CurrentStoredPower != x.MaxStoredPower);
+            // Pick relevant blocks
+            var jumpDrives = jumpDrivesRaw.Where(x
+                => x.OwnerId == Me.OwnerId &&
+                x.CubeGrid == Me.CubeGrid &&
+                x.IsFunctional && x.Enabled &&
+                x.CurrentStoredPower != x.MaxStoredPower)
+                .ToHashSet();
             yield return true;
 
             // Apply changes
-
             bool enable = storedRatio > _startChargingAbove;
-            _echoString = $"Charging was last {(enable ? "enabled" : "disabled")}.";
+            _echoString = $"Stored power: {storedRatio}.{Environment.NewLine}Charging is {(enable ? "enabled" : "disabled")}.";
             foreach (var jumpdrive in jumpDrives)
-                jumpdrive.Enabled = enable;
+                jumpdrive.Recharge = enable;
         }
     }
 }
