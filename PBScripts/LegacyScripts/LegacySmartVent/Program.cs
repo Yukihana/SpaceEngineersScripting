@@ -1,14 +1,10 @@
-﻿using PBScripts._HelperMethods;
+﻿using PBScripts._Helpers;
 using Sandbox.ModAPI.Ingame;
 using SpaceEngineers.Game.ModAPI;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using VRageMath;
 
-namespace PBScripts.LegacySmartVent
+namespace PBScripts.LegacyScripts.LegacySmartVent
 {
     internal class Program : SEProgramBase
     {
@@ -205,7 +201,7 @@ namespace PBScripts.LegacySmartVent
                     r += ",";
                     continue;
                 }
-                r += (i < 30) ? "[" : "]";
+                r += i < 30 ? "[" : "]";
             }
             return r;
         }
@@ -230,7 +226,7 @@ namespace PBScripts.LegacySmartVent
             }
             else
             {
-                return Counter += (RoomPressure < 0) ? "##" : ">>";
+                return Counter += RoomPressure < 0 ? "##" : ">>";
             }
         }
 
@@ -258,7 +254,7 @@ namespace PBScripts.LegacySmartVent
             }
 
             // Normal display
-            LCD.FontColor = (Venting ? new Color(255, 141, 53) : new Color(53, 141, 255));
+            LCD.FontColor = Venting ? new Color(255, 141, 53) : new Color(53, 141, 255);
             LCD.WriteText(
                 "Room Pressure - " + RoomPressure
                 + "%\n" + GetIndicator()

@@ -1,6 +1,6 @@
 ﻿using VRageMath;
 
-namespace PBScripts._HelperMethods
+namespace PBScripts._Helpers
 {
     internal partial class SEProgramBase
     {

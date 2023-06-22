@@ -1,10 +1,10 @@
-﻿using PBScripts._HelperMethods;
+﻿using PBScripts._Helpers;
 using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace PBScripts.LcdApplyProperty
+namespace PBScripts.LegacyScripts.LcdApplyProperty
 {
     internal class Program : SEProgramBase
     {

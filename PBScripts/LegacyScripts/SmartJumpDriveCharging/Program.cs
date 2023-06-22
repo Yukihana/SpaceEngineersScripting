@@ -1,10 +1,10 @@
-﻿using PBScripts._HelperMethods;
+﻿using PBScripts._Helpers;
 using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace PBScripts.SmartJumpDriveCharging
+namespace PBScripts.LegacyScripts.SmartJumpDriveCharging
 {
     internal class Program : SEProgramBase
     {

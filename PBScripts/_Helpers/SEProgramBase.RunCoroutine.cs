@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace PBScripts._HelperMethods
+namespace PBScripts._Helpers
 {
     internal partial class SEProgramBase
     {

@@ -1,4 +1,4 @@
-﻿using PBScripts._HelperMethods;
+﻿using PBScripts._Helpers;
 using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;

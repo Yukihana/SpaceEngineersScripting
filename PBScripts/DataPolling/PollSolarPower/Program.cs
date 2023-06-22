@@ -1,6 +1,5 @@
-﻿using PBScripts._HelperMethods;
+﻿using PBScripts._Helpers;
 using Sandbox.ModAPI.Ingame;
-using SpaceEngineers.Game.Entities.Blocks;
 using SpaceEngineers.Game.ModAPI;
 using System;
 using System.Collections.Generic;
@@ -8,7 +7,6 @@ using System.Linq;
 using System.Text;
 using VRage.Game;
 using VRage.Game.GUI.TextPanel;
-using VRage.Game.ModAPI;
 
 namespace PBScripts.DataPolling.PollSolarPower
 {

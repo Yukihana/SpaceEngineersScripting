@@ -1,18 +1,19 @@
 ﻿using PBScripts._Helpers;
 using Sandbox.ModAPI.Ingame;
+using SpaceEngineers.Game.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using VRage.Game.GUI.TextPanel;
 
-namespace PBScripts.PollStoredPower
+namespace PBScripts.Cooperative.LifeSupport.AutoOxyFarm
 {
     internal class Program : SEProgramBase
     {
         public Program()
         {
             Runtime.UpdateFrequency = UpdateFrequency.Update100;
-            _interval = TimeSpan.FromMinutes(1);
+            FIXEDMINIMUMINTERVAL = TimeSpan.FromMinutes(1);
         }
 
         public void Main()
@@ -21,8 +22,11 @@ namespace PBScripts.PollStoredPower
         }
 
         private IEnumerator<bool> _pollingTask = null;
-        private readonly TimeSpan _interval;
         private const int BATCHSIZE = 20;
+        private readonly TimeSpan FIXEDMINIMUMINTERVAL;
+        private readonly Random _random = new Random();
+        private const int RANDOMINTERVALMAX = 60;
+        private const float POWERFACTORTHRESHOLD = 0.75f;
 
         // Coroutine
 
@@ -33,25 +37,26 @@ namespace PBScripts.PollStoredPower
             int evaluated = 0;
             int count = 0;
 
-            float storedPower = 0f;
-            float maxPower = 0f;
-            float powerPercent = 0f;
+            // Retrieve polled data: Grid power factor (Defaults to max)
+            float gridPowerFactor = 1f;
+            var pollEnumerator = GetPolledDataAsFloat("GridPowerFactor");
+            while (pollEnumerator.MoveNext())
+            {
+                gridPowerFactor = pollEnumerator.Current;
+                yield return true;
+            }
 
-            // Enumerate batteries
-            var _batteries = new List<IMyBatteryBlock>();
-            GridTerminalSystem.GetBlocksOfType(_batteries);
+            // Enumerate oxygen farms
+            var _farms = new List<IMyOxygenFarm>();
+            GridTerminalSystem.GetBlocksOfType(_farms);
             yield return true;
 
-            foreach (IMyBatteryBlock battery in _batteries)
+            foreach (IMyOxygenFarm farm in _farms)
             {
                 evaluated++;
 
                 // Validate
-                if (battery.CubeGrid != Me.CubeGrid)
-                    continue;
-                if (!battery.IsFunctional)
-                    continue;
-                if (battery.ChargeMode == ChargeMode.Recharge)
+                if (!farm.IsFunctional)
                     continue;
 
                 // Accumulate
@@ -84,8 +89,12 @@ namespace PBScripts.PollStoredPower
             Me.CustomData = output;
             yield return true;
 
-            // Wait for interval to finish
-            while (DateTime.UtcNow - startTime < _interval)
+            // Wait for interval to finish followed by an additional random
+            while (DateTime.UtcNow - startTime < FIXEDMINIMUMINTERVAL)
+                yield return true;
+            startTime = DateTime.UtcNow;
+            TimeSpan randomInterval = TimeSpan.FromSeconds(_random.Next(0, RANDOMINTERVALMAX));
+            while (DateTime.UtcNow - startTime < randomInterval)
                 yield return true;
         }
     }

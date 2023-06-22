@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace PBScripts.AutoCloseDoors
+namespace PBScripts.LegacyScripts.AutoCloseDoors
 {
     /// <summary>
     /// Sample script that closes doors every 5 seconds.

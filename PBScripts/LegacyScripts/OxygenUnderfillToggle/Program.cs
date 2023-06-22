@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PBScripts.OxygenUnderfillToggle
+namespace PBScripts.LegacyScripts.OxygenUnderfillToggle
 {
     internal class Program
     {

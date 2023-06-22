@@ -1,11 +1,10 @@
-﻿using PBScripts._HelperMethods;
+﻿using PBScripts._Helpers;
 using Sandbox.ModAPI.Ingame;
 using SpaceEngineers.Game.ModAPI;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace PBScripts.SmartAirVents
+namespace PBScripts.LegacyScripts.SmartAirVents
 {
     internal class Program : SEProgramBase
     {
