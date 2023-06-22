@@ -1,9 +1,14 @@
 ﻿using PBScripts._HelperMethods;
-using Sandbox.Game.GameSystems.Electricity;
 using Sandbox.ModAPI.Ingame;
+using SpaceEngineers.Game.Entities.Blocks;
 using SpaceEngineers.Game.ModAPI;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using VRage.Game;
+using VRage.Game.GUI.TextPanel;
+using VRage.Game.ModAPI;
 
 namespace PBScripts.DataPolling.PollSolarPower
 {
@@ -12,6 +17,7 @@ namespace PBScripts.DataPolling.PollSolarPower
         public Program()
         {
             Runtime.UpdateFrequency = UpdateFrequency.Update100;
+            _interval = TimeSpan.FromMinutes(1);
         }
 
         public void Main()
@@ -20,81 +26,95 @@ namespace PBScripts.DataPolling.PollSolarPower
         }
 
         private IEnumerator<bool> _pollingTask = null;
-
-        // Specifics
-
-        private class PowerInfo
-        {
-            public float Current { get; set; } = 0.0f;
-            public float Maximum { get; set; } = 0.0f;
-        }
-
-        private readonly TimeSpan _interval = TimeSpan.FromMinutes(1);
-        private DateTime _startTime = DateTime.UtcNow;
-
-        private const int _batchSize = 10;
-        private int _batchIndex = 0;
-
-        private readonly List<IMySolarPanel> _panels = new List<IMySolarPanel>();
-        private int _count = 0;
-
-        private readonly List<PowerInfo> _powerValues = new List<PowerInfo>();
-        private float _currentSolarPower = 0f;
-        private float _maximumSolarPower = 0f;
+        private readonly TimeSpan _interval;
+        private const int BATCHSIZE = 20;
 
         // Coroutine
 
         private IEnumerator<bool> PollSolarPower()
         {
             // Prepare
-            _startTime = DateTime.UtcNow;
-            _count = 0;
-            _powerValues.Clear();
-            _currentSolarPower = 0f;
-            _maximumSolarPower = 0f;
+            DateTime startTime = DateTime.UtcNow;
+            int evaluated = 0;
 
-            // Wait
-            while (DateTime.UtcNow - _startTime < _interval)
-                yield return true;
+            int count = 0;
+            int activeCount = 0;
+
+            var powerFactors = new List<float>();
+            float currentSolarPower = 0f;
+            float availableSolarPower = 0f;
+            float maximumSolarPower = 0f;
 
             // Enumerate solar panels
             var panels = new List<IMySolarPanel>();
             GridTerminalSystem.GetBlocksOfType(panels);
             yield return true;
 
-            // Accumulate power data
-            _powerValues.Clear();
-            int batch = 0;
             foreach (var panel in panels)
             {
+                evaluated++;
+
                 // Validate
+                if (!panel.Enabled)
+                    continue;
                 if (!panel.IsFunctional)
                     continue;
 
                 // Accumulate
-                _powerValues.Add(new PowerInfo
-                {
-                    Current = panel.CurrentOutput,
-                    Maximum = panel.MaxOutput,
-                });
+                count++;
+                if (panel.CurrentOutput > 0)
+                    activeCount++;
+                float panelMax = panel.CubeGrid.GridSizeEnum == MyCubeSize.Large ? 0.16f : 0.04f;
+                currentSolarPower += panel.CurrentOutput;
+                availableSolarPower += panel.MaxOutput;
+                maximumSolarPower += panelMax;
+                powerFactors.Add(panel.MaxOutput / panelMax);
 
                 // Yield by batch
-                if (++batch >= _batchSize)
-                {
+                if (evaluated % BATCHSIZE == 0)
                     yield return true;
-                    batch = 0;
-                }
             }
             yield return true;
 
             // Calculate
-            foreach (var powerInfo in _powerValues)
-            {
-            }
+            var efficiency = availableSolarPower / maximumSolarPower;
+            var actualEfficiency = currentSolarPower / maximumSolarPower;
+            float mean = powerFactors.Average();
+            var sqdiff = powerFactors.Select(x => (x - mean) * (x - mean)).ToList();
+            var cumsqdiff = sqdiff.Sum();
+            var variance = cumsqdiff / count;
+            var deviance = Math.Sqrt(variance);
             yield return true;
 
-            // Wait for interval to finish
-            while (DateTime.UtcNow - _startTime < _interval)
+            // Prepare stats
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine($"[DataPolling:SolarInput]");
+            sb.AppendLine();
+            sb.AppendLine($"[TotalSolarPanelCount:{count}]");
+            sb.AppendLine($"[ActiveSolarPanelCount:{activeCount}]");
+            sb.AppendLine();
+            sb.AppendLine($"[CurrentSolarInput:{currentSolarPower}]");
+            sb.AppendLine($"[AvailableSolarInput:{availableSolarPower}]");
+            sb.AppendLine($"[MaximumSolarInput:{maximumSolarPower}]");
+            sb.AppendLine();
+            sb.AppendLine($"[SolarInputEfficiency:{efficiency}]");
+            sb.AppendLine($"[SolarInputFactor:{actualEfficiency}]");
+            sb.AppendLine($"[SolarInputVariance:{variance}]");
+            sb.AppendLine($"[SolarInputDeviance:{deviance}]");
+            string output = sb.ToString();
+            yield return true;
+
+            // Post stats
+            IMyTextSurface monitor = Me.GetSurface(0);
+            monitor.ContentType = ContentType.TEXT_AND_IMAGE;
+            monitor.FontColor = new VRageMath.Color(1f, 1f, 0.5f);
+            monitor.WriteText(output);
+            Me.CustomData = output;
+            yield return true;
+
+            // Wait for interval
+            while (DateTime.UtcNow - startTime < _interval)
                 yield return true;
         }
     }
+}

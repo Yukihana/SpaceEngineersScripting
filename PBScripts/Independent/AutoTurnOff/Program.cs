@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Text;
 using VRage.Game.GUI.TextPanel;
 
-namespace PBScripts.PollStoredPower
+namespace PBScripts.Independent.AutoTurnOff
 {
     internal class Program : SEProgramBase
     {
@@ -17,7 +17,7 @@ namespace PBScripts.PollStoredPower
 
         public void Main()
         {
-            RunCoroutine(ref _pollingTask, () => PollGridPower());
+            RunCoroutine(ref _pollingTask, () => AutoTurnOffBlocks());
         }
 
         private IEnumerator<bool> _pollingTask = null;
@@ -26,39 +26,34 @@ namespace PBScripts.PollStoredPower
 
         // Coroutine
 
-        private IEnumerator<bool> PollGridPower()
+        private IEnumerator<bool> AutoTurnOffBlocks()
         {
             // Prepare
             DateTime startTime = DateTime.UtcNow;
-            int evaluated = 0;
-            int count = 0;
+            long evaluated = 0;
 
-            float storedPower = 0f;
-            float maxPower = 0f;
-            float powerPercent = 0f;
-
-            // Enumerate batteries
-            var _batteries = new List<IMyBatteryBlock>();
-            GridTerminalSystem.GetBlocksOfType(_batteries);
+            // Enumerate relevant blocks
+            var thrusters = new List<IMyThrust>();
+            GridTerminalSystem.GetBlocksOfType(thrusters);
             yield return true;
 
-            foreach (IMyBatteryBlock battery in _batteries)
+            // Validate and shut them down
+            foreach (var thruster in thrusters)
             {
                 evaluated++;
 
                 // Validate
-                if (battery.CubeGrid != Me.CubeGrid)
+                if (thruster.CubeGrid != Me.CubeGrid)
                     continue;
-                if (!battery.IsFunctional)
+                if (!thruster.IsFunctional)
                     continue;
-                if (battery.ChargeMode == ChargeMode.Recharge)
+                if (!thruster.Enabled)
+                    continue;
+                if (!thruster.BlockDefinition.SubtypeId.Contains("AtmosphericThruster"))
                     continue;
 
-                // Accumulate
-                count++;
-                storedPower += battery.CurrentStoredPower;
-                maxPower += battery.MaxStoredPower;
-                powerPercent = storedPower / maxPower;
+                // Shutdown
+                thruster.Enabled = false;
 
                 // Yield by batch
                 if (evaluated % BATCHSIZE == 0)
@@ -68,23 +63,19 @@ namespace PBScripts.PollStoredPower
 
             // Prepare stats
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("[DataPolling:StoredPower]");
-            sb.AppendLine($"[GridBatteryCount:{count}]");
-            sb.AppendLine($"[GridPowerStored:{storedPower}]");
-            sb.AppendLine($"[GridPowerMaximum:{maxPower}]");
-            sb.AppendLine($"[GridPowerFactor:{powerPercent}]");
+            sb.AppendLine("[Independent:AutoTurnOff]");
+            sb.AppendLine();
+            sb.AppendLine("[AutoTurnOffType:AtmosphericThruster]");
             string output = sb.ToString();
-            yield return true;
 
             // Post stats
             IMyTextSurface monitor = Me.GetSurface(0);
             monitor.ContentType = ContentType.TEXT_AND_IMAGE;
-            monitor.FontColor = new VRageMath.Color(1f, 1f, 0.5f);
+            monitor.FontColor = new VRageMath.Color(1f, 0.5f, 0.5f);
             monitor.WriteText(output);
             Me.CustomData = output;
-            yield return true;
 
-            // Wait for interval to finish
+            // On early finish, wait for interval
             while (DateTime.UtcNow - startTime < _interval)
                 yield return true;
         }
