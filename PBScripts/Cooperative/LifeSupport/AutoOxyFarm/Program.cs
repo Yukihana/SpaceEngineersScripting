@@ -18,7 +18,7 @@ namespace PBScripts.Cooperative.LifeSupport.AutoOxyFarm
 
         public void Main()
         {
-            RunCoroutine(ref _pollingTask, () => PollGridPower());
+            RunCoroutine(ref _pollingTask, () => CycleOxygenFarms());
         }
 
         private IEnumerator<bool> _pollingTask = null;
@@ -27,20 +27,28 @@ namespace PBScripts.Cooperative.LifeSupport.AutoOxyFarm
         private readonly Random _random = new Random();
         private const int RANDOMINTERVALMAX = 60;
         private const float POWERFACTORTHRESHOLD = 0.75f;
+        private const float OXYGENFACTORTHRESHOLD = 0.98f;
+        private const float PRODUCTIONMINIMUM = 0.5f;
 
         // Coroutine
 
-        private IEnumerator<bool> PollGridPower()
+        private IEnumerator<bool> CycleOxygenFarms()
         {
             // Prepare
             DateTime startTime = DateTime.UtcNow;
             int evaluated = 0;
             int count = 0;
+            int activeCount = 0;
+
+            // Poll statistics
+            var statsEnumerator = PollStatistics();
+            while (statsEnumerator.MoveNext())
+                yield return true;
 
             // Retrieve polled data: Grid power factor (Defaults to max)
             float gridPowerFactor = 1f;
-            var gpfEnumerator = GetPolledDataAsFloat("GridPowerFactor");
-            while (gpfEnumerator.MoveNext())
+            var gpfEnumerator = GetFloatStat("GridPowerFactor");
+            while (gpfEnumerator.MoveNext() && gpfEnumerator.Current != float.NaN)
             {
                 gridPowerFactor = gpfEnumerator.Current;
                 yield return true;
@@ -48,8 +56,8 @@ namespace PBScripts.Cooperative.LifeSupport.AutoOxyFarm
 
             // Retrieve polled data: Grid oxygen factor (Defaults to min)
             float gridOxygenFactor = 0f;
-            var gofEnumerator = GetPolledDataAsFloat("GridOxygenFactor");
-            while (gofEnumerator.MoveNext())
+            var gofEnumerator = GetFloatStat("GridOxygenFactor");
+            while (gofEnumerator.MoveNext() && gofEnumerator.Current != float.NaN)
             {
                 gridOxygenFactor = gofEnumerator.Current;
                 yield return true;
@@ -60,7 +68,10 @@ namespace PBScripts.Cooperative.LifeSupport.AutoOxyFarm
             GridTerminalSystem.GetBlocksOfType(_farms);
             yield return true;
 
-            // Switch all on
+            // Evaluate critical mode
+            bool critical = gridPowerFactor < POWERFACTORTHRESHOLD || gridOxygenFactor > OXYGENFACTORTHRESHOLD;
+
+            // Switch all on (or off if critical)
             foreach (IMyOxygenFarm farm in _farms)
             {
                 evaluated++;
@@ -72,7 +83,7 @@ namespace PBScripts.Cooperative.LifeSupport.AutoOxyFarm
                     continue;
 
                 // Control
-                farm.Enabled = true;
+                farm.Enabled = !critical;
                 count++;
 
                 // Yield by batch
@@ -80,16 +91,43 @@ namespace PBScripts.Cooperative.LifeSupport.AutoOxyFarm
                     yield return true;
             }
             yield return true;
+            evaluated = 0;
 
-            // Switch inefficient ones off
+            // Switch inefficient ones off (skip on critical)
+            if (!critical)
+            {
+                foreach (IMyOxygenFarm farm in _farms)
+                {
+                    evaluated++;
+
+                    // Validate
+                    if (!farm.IsSameConstructAs(Me))
+                        continue;
+                    if (!farm.IsFunctional)
+                        continue;
+
+                    // Control
+                    if (farm.GetOutput() < PRODUCTIONMINIMUM)
+                        farm.Enabled = false;
+                    else
+                        activeCount++;
+
+                    // Yield by batch
+                    if (evaluated % BATCHSIZE == 0)
+                        yield return true;
+                }
+                yield return true;
+            }
 
             // Prepare stats
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine("[DataPolling:StoredPower]");
-            sb.AppendLine($"[GridBatteryCount:{count}]");
-            sb.AppendLine($"[GridPowerStored:{storedPower}]");
-            sb.AppendLine($"[GridPowerMaximum:{maxPower}]");
-            sb.AppendLine($"[GridPowerFactor:{powerPercent}]");
+            sb.AppendLine("[Cooperative:AutoOxyFarm]");
+            sb.AppendLine();
+            sb.AppendLine($"[OxygenFarmsTotal:{count}]");
+            sb.AppendLine($"[OxygenFarmsActive:{activeCount}]");
+            sb.AppendLine($"[OxygenFarmsOutputCurrent:]");
+            sb.AppendLine($"[OxygenFarmsOutputMaximum:]");
+            sb.AppendLine($"[OxygenFarmsOutputFactor:]");
             string output = sb.ToString();
             yield return true;
 

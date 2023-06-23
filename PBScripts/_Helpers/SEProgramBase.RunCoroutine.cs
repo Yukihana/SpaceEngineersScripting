@@ -5,7 +5,7 @@ namespace PBScripts._Helpers
 {
     internal partial class SEProgramBase
     {
-        public void RunCoroutine(ref IEnumerator<bool> enumerator, Func<IEnumerator<bool>> enumeratorFactory)
+        protected void RunCoroutine(ref IEnumerator<bool> enumerator, Func<IEnumerator<bool>> enumeratorFactory)
         {
             if (enumerator == null)
                 enumerator = enumeratorFactory();
