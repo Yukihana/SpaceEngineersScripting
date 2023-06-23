@@ -14,7 +14,7 @@ namespace PBScripts.Independent.DisVent
         public Program()
         {
             Runtime.UpdateFrequency = UpdateFrequency.Update100;
-            _interval = TimeSpan.FromMinutes(1);
+            FIXEDMINIMUMINTERVAL = TimeSpan.FromMinutes(1);
         }
 
         public void Main()
@@ -23,8 +23,10 @@ namespace PBScripts.Independent.DisVent
         }
 
         private IEnumerator<bool> _pollingTask = null;
-        private readonly TimeSpan _interval;
         private const int BATCHSIZE = 20;
+        private readonly TimeSpan FIXEDMINIMUMINTERVAL;
+        private readonly Random _random = new Random();
+        private const int RANDOMINTERVALMAX = 60;
 
         // Coroutine
 
@@ -95,7 +97,13 @@ namespace PBScripts.Independent.DisVent
             Me.CustomData = output;
 
             // On early finish, wait for interval
-            while (DateTime.UtcNow - startTime < _interval)
+            while (DateTime.UtcNow - startTime < FIXEDMINIMUMINTERVAL)
+                yield return true;
+
+            // Followed that by an additional random interval
+            startTime = DateTime.UtcNow;
+            TimeSpan randomInterval = TimeSpan.FromSeconds(_random.Next(0, RANDOMINTERVALMAX));
+            while (DateTime.UtcNow - startTime < randomInterval)
                 yield return true;
         }
     }

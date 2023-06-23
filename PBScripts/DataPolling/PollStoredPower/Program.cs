@@ -12,7 +12,7 @@ namespace PBScripts.PollStoredPower
         public Program()
         {
             Runtime.UpdateFrequency = UpdateFrequency.Update100;
-            _interval = TimeSpan.FromMinutes(1);
+            FIXEDINTERVALMINIMUM = TimeSpan.FromMinutes(1);
         }
 
         public void Main()
@@ -21,7 +21,7 @@ namespace PBScripts.PollStoredPower
         }
 
         private IEnumerator<bool> _pollingTask = null;
-        private readonly TimeSpan _interval;
+        private readonly TimeSpan FIXEDINTERVALMINIMUM;
         private const int BATCHSIZE = 20;
 
         // Coroutine
@@ -85,7 +85,7 @@ namespace PBScripts.PollStoredPower
             yield return true;
 
             // Wait for interval to finish
-            while (DateTime.UtcNow - startTime < _interval)
+            while (DateTime.UtcNow - startTime < FIXEDINTERVALMINIMUM)
                 yield return true;
         }
     }

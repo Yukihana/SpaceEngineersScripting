@@ -22,7 +22,7 @@ namespace PBScripts.Cooperative.LifeSupport.AutoOxyFarm
         }
 
         private IEnumerator<bool> _pollingTask = null;
-        private const int BATCHSIZE = 20;
+        private const int BATCHSIZE = 16;
         private readonly TimeSpan FIXEDMINIMUMINTERVAL;
         private readonly Random _random = new Random();
         private const int RANDOMINTERVALMAX = 60;
@@ -39,10 +39,19 @@ namespace PBScripts.Cooperative.LifeSupport.AutoOxyFarm
 
             // Retrieve polled data: Grid power factor (Defaults to max)
             float gridPowerFactor = 1f;
-            var pollEnumerator = GetPolledDataAsFloat("GridPowerFactor");
-            while (pollEnumerator.MoveNext())
+            var gpfEnumerator = GetPolledDataAsFloat("GridPowerFactor");
+            while (gpfEnumerator.MoveNext())
             {
-                gridPowerFactor = pollEnumerator.Current;
+                gridPowerFactor = gpfEnumerator.Current;
+                yield return true;
+            }
+
+            // Retrieve polled data: Grid oxygen factor (Defaults to min)
+            float gridOxygenFactor = 0f;
+            var gofEnumerator = GetPolledDataAsFloat("GridOxygenFactor");
+            while (gofEnumerator.MoveNext())
+            {
+                gridOxygenFactor = gofEnumerator.Current;
                 yield return true;
             }
 
@@ -51,25 +60,28 @@ namespace PBScripts.Cooperative.LifeSupport.AutoOxyFarm
             GridTerminalSystem.GetBlocksOfType(_farms);
             yield return true;
 
+            // Switch all on
             foreach (IMyOxygenFarm farm in _farms)
             {
                 evaluated++;
 
                 // Validate
+                if (!farm.IsSameConstructAs(Me))
+                    continue;
                 if (!farm.IsFunctional)
                     continue;
 
-                // Accumulate
+                // Control
+                farm.Enabled = true;
                 count++;
-                storedPower += battery.CurrentStoredPower;
-                maxPower += battery.MaxStoredPower;
-                powerPercent = storedPower / maxPower;
 
                 // Yield by batch
                 if (evaluated % BATCHSIZE == 0)
                     yield return true;
             }
             yield return true;
+
+            // Switch inefficient ones off
 
             // Prepare stats
             StringBuilder sb = new StringBuilder();
@@ -89,9 +101,11 @@ namespace PBScripts.Cooperative.LifeSupport.AutoOxyFarm
             Me.CustomData = output;
             yield return true;
 
-            // Wait for interval to finish followed by an additional random
+            // On early finish, wait for interval
             while (DateTime.UtcNow - startTime < FIXEDMINIMUMINTERVAL)
                 yield return true;
+
+            // Followed that by an additional random interval
             startTime = DateTime.UtcNow;
             TimeSpan randomInterval = TimeSpan.FromSeconds(_random.Next(0, RANDOMINTERVALMAX));
             while (DateTime.UtcNow - startTime < randomInterval)
