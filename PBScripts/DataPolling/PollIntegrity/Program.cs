@@ -1,11 +1,11 @@
 ﻿using PBScripts._Helpers;
 using Sandbox.ModAPI.Ingame;
-using System;
 using System.Collections.Generic;
+using System;
 using System.Text;
-using VRage.Game.GUI.TextPanel;
+using VRage.Game.ModAPI.Ingame;
 
-namespace PBScripts.DataPolling.PollOxygenStorage
+namespace PBScripts.DataPolling.PollIntegrity
 {
     internal class Program : SEProgramBase
     {
@@ -13,7 +13,7 @@ namespace PBScripts.DataPolling.PollOxygenStorage
         { Runtime.UpdateFrequency = UpdateFrequency.Update100; }
 
         public void Main()
-        { RunCoroutine(ref _enumerator, () => PollGridOxygen()); }
+        { RunCoroutine(ref _enumerator, () => PollIntegrity()); }
 
         private IEnumerator<bool> _enumerator = null;
         private readonly TimeSpan INTERVAL_FIXED_MINIMUM = TimeSpan.FromMinutes(1);
@@ -23,57 +23,34 @@ namespace PBScripts.DataPolling.PollOxygenStorage
 
         // Coroutine
 
-        private const string IGNORE_MARKER = "PollIgnore";
-
-        private IEnumerator<bool> PollGridOxygen()
+        private IEnumerator<bool> PollIntegrity()
         {
             // Prepare
             DateTime startTime = DateTime.UtcNow;
-            int evaluated = 0;
+            ulong evaluated = 0;
             int count = 0;
 
-            double storedOxygen = 0f;
-            double maxOxygen = 0f;
-            float oxygenPercent = 0f;
+            // Enumerate all blocks
+            var Blocks = new HashSet<IMySlimBlock>();
+            var pendingEnum = new Queue<IMySlimBlock>();
 
-            // Enumerate oxygen tanks
-            var tanks = new List<IMyGasTank>();
-            GridTerminalSystem.GetBlocksOfType(tanks);
-            yield return true;
+            // Starter blocks
+            var startPosition = Me.Position;
+            var firstblock = Me.CubeGrid.GetCubeBlock(startPosition);
+            pendingEnum.Enqueue(firstblock);
 
-            foreach (var tank in tanks)
+            // Enumerate
+            while (pendingEnum.Count > 0)
             {
-                evaluated++;
-
-                // Validate
-                if (!tank.IsSameConstructAs(Me))
-                    continue;
-                if (!tank.IsFunctional)
-                    continue;
-                if (!tank.Enabled)
-                    continue;
-                if (tank.Stockpile)
-                    continue;
-                if (tank.CustomData.Contains($"[{IGNORE_MARKER}]"))
-                    continue;
-                if (tank.BlockDefinition.SubtypeName.Contains("Hydrogen")) // To rule out hydrogen tanks. OxygenTank subtype id is blank.
-                    continue;
-
-                // Accumulate
-                count++;
-                maxOxygen += tank.Capacity;
-                storedOxygen += tank.Capacity * tank.FilledRatio;
-
-                // Yield by batch
-                if (evaluated % BATCH_SIZE == 0)
-                    yield return true;
+                unchecked { evaluated++; }
+                var block = pendingEnum.Dequeue();
             }
 
             // Calculate
-            oxygenPercent = (float)(storedOxygen / maxOxygen);
 
             // Prepare stats
             StringBuilder sb = new StringBuilder();
+
             sb.AppendLine($"[PolledStatistics:GridOxygen]");
             sb.AppendLine();
             sb.AppendLine($"[GridOxygenStored:{storedOxygen}]");
@@ -85,6 +62,7 @@ namespace PBScripts.DataPolling.PollOxygenStorage
 
             // Post stats
             IMyTextSurface monitor = Me.GetSurface(0);
+
             monitor.ContentType = ContentType.TEXT_AND_IMAGE;
             monitor.FontColor = new VRageMath.Color(0f, 1f, 0.5f);
             monitor.WriteText(output);
