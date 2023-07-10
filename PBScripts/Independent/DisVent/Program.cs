@@ -19,7 +19,7 @@ namespace PBScripts.Independent.DisVent
 
         public void Main()
         {
-            RunCoroutine(ref _pollingTask, () => DisableVents());
+            CycleCoroutine(ref _pollingTask, () => DisableVents());
         }
 
         private IEnumerator<bool> _pollingTask = null;

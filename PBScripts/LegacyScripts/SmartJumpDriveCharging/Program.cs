@@ -24,7 +24,7 @@ namespace PBScripts.LegacyScripts.SmartJumpDriveCharging
 
         public void Main()
         {
-            RunCoroutine(ref _jumpDriveChargeControl, PollAutoBatteries);
+            CycleCoroutine(ref _jumpDriveChargeControl, PollAutoBatteries);
             _delayCounter++;
             Echo($"{_echoString} ({_delayCounter})");
         }

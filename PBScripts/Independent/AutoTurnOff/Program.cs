@@ -17,7 +17,7 @@ namespace PBScripts.Independent.AutoTurnOff
 
         public void Main()
         {
-            RunCoroutine(ref _pollingTask, () => AutoTurnOffBlocks());
+            CycleCoroutine(ref _pollingTask, () => AutoTurnOffBlocks());
         }
 
         private IEnumerator<bool> _pollingTask = null;

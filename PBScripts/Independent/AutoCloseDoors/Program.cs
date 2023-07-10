@@ -19,7 +19,7 @@ namespace PBScripts.Independent.AutoCloseDoors
         { Runtime.UpdateFrequency = UpdateFrequency.Update100; }
 
         public void Main()
-        { RunCoroutine(ref _enumerator, () => CloseDoors()); }
+        { CycleCoroutine(ref _enumerator, () => CloseDoors()); }
 
         private IEnumerator<bool> _enumerator = null;
         private readonly TimeSpan INTERVAL_MINIMUM = TimeSpan.FromSeconds(10);

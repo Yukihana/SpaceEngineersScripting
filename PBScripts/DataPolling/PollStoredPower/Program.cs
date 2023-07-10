@@ -17,7 +17,7 @@ namespace PBScripts.PollStoredPower
 
         public void Main()
         {
-            RunCoroutine(ref _pollingTask, () => PollGridPower());
+            CycleCoroutine(ref _pollingTask, () => PollGridPower());
         }
 
         private IEnumerator<bool> _pollingTask = null;

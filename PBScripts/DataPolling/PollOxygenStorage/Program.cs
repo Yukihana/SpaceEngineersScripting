@@ -13,7 +13,7 @@ namespace PBScripts.DataPolling.PollOxygenStorage
         { Runtime.UpdateFrequency = UpdateFrequency.Update100; }
 
         public void Main()
-        { RunCoroutine(ref _enumerator, () => PollGridOxygen()); }
+        { CycleCoroutine(ref _enumerator, () => PollGridOxygen()); }
 
         private IEnumerator<bool> _enumerator = null;
         private readonly TimeSpan INTERVAL_FIXED_MINIMUM = TimeSpan.FromMinutes(1);

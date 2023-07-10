@@ -14,7 +14,7 @@ namespace PBScripts.Independent.AutoFormatDisplays
         { Runtime.UpdateFrequency = UpdateFrequency.Update100; }
 
         public void Main()
-        { RunCoroutine(ref _enumerator, () => FormatDisplays()); }
+        { CycleCoroutine(ref _enumerator, () => FormatDisplays()); }
 
         private IEnumerator<bool> _enumerator = null;
         private readonly TimeSpan INTERVAL_FIXED_MINIMUM = TimeSpan.FromMinutes(5);

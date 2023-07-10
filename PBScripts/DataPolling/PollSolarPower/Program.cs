@@ -20,7 +20,7 @@ namespace PBScripts.DataPolling.PollSolarPower
 
         public void Main()
         {
-            RunCoroutine(ref _pollingTask, () => PollSolarPower());
+            CycleCoroutine(ref _pollingTask, () => PollSolarPower());
         }
 
         private IEnumerator<bool> _pollingTask = null;

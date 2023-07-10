@@ -13,7 +13,7 @@ namespace PBScripts.DataPolling.PollIntegrity
         { Runtime.UpdateFrequency = UpdateFrequency.Update100; }
 
         public void Main()
-        { RunCoroutine(ref _enumerator, () => PollIntegrity()); }
+        { CycleCoroutine(ref _enumerator, () => PollIntegrity()); }
 
         private IEnumerator<bool> _enumerator = null;
         private readonly TimeSpan INTERVAL_FIXED_MINIMUM = TimeSpan.FromMinutes(1);
@@ -30,20 +30,37 @@ namespace PBScripts.DataPolling.PollIntegrity
             ulong evaluated = 0;
             int count = 0;
 
-            // Enumerate all blocks
-            var Blocks = new HashSet<IMySlimBlock>();
-            var pendingEnum = new Queue<IMySlimBlock>();
+            // Get all grids
+            var cubeGrids = new List<IMyCubeGrid>();
+            var pendingCubeGrids = new Queue<IMyCubeGrid>();
+            pendingCubeGrids.Enqueue(Me.CubeGrid);
 
-            // Starter blocks
+            while (pendingCubeGrids.Count > 0)
+            {
+                var grid = pendingCubeGrids.Dequeue();
+            }
+
+            // Blocks
             var startPosition = Me.Position;
             var firstblock = Me.CubeGrid.GetCubeBlock(startPosition);
-            pendingEnum.Enqueue(firstblock);
+            var allCubes = new HashSet<IMyCubeBlock>();
+            var pendingCubes = new HashSet<IMyCubeBlock>();
 
-            // Enumerate
-            while (pendingEnum.Count > 0)
+            // Get all blocks
+            while (pendingCubes.Count > 0)
             {
-                unchecked { evaluated++; }
-                var block = pendingEnum.Dequeue();
+                IMyCubeBlock currentBlock = pendingCubes.FirstElement();
+                var adjacent = currentBlock.GetAdjacent();
+                foreach (var block in adjacent)
+                {
+                    if (!allCubes.Contains(block))
+                        pendingCubes.Add(block);
+                }
+                pendingCubes.Remove(currentBlock);
+
+                // Yield by batch
+                if (evaluated % BATCH_SIZE == 0)
+                    yield return true;
             }
 
             // Calculate

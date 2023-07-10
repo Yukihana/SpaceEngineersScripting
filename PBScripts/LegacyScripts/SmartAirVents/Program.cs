@@ -33,9 +33,9 @@ namespace PBScripts.LegacyScripts.SmartAirVents
 
         public void Main()
         {
-            RunCoroutine(ref _pollTask, () => PollVents());
+            CycleCoroutine(ref _pollTask, () => PollVents());
             Echo(_pollList.Count.ToString());
-            RunCoroutine(ref _activateTask, () => ActivateVents());
+            CycleCoroutine(ref _activateTask, () => ActivateVents());
             Echo(_activateList.Count.ToString());
             DeactivateVents();
             Echo(_active.Count.ToString());

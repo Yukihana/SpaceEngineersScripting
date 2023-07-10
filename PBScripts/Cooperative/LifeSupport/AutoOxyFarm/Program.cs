@@ -14,7 +14,7 @@ namespace PBScripts.Cooperative.LifeSupport.AutoOxyFarm
         { Runtime.UpdateFrequency = UpdateFrequency.Update100; }
 
         public void Main()
-        { RunCoroutine(ref _enumerator, () => CycleOxygenFarms()); }
+        { CycleCoroutine(ref _enumerator, () => CycleOxygenFarms()); }
 
         private IEnumerator<bool> _enumerator = null;
         private readonly TimeSpan INTERVAL_MINIMUM = TimeSpan.FromMinutes(1);
