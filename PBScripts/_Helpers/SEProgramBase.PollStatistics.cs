@@ -33,7 +33,7 @@ namespace PBScripts._Helpers
                     continue;
 
                 // Collect
-                statistics.Add(program.CustomData);
+                statistics.Add(program.GetSurface(0).GetText());
 
                 //  Yield by batch
                 if (evaluated % batchsize == 0)

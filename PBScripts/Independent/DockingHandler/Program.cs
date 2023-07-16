@@ -63,9 +63,9 @@ namespace PBScripts.Independent.DockingHandler
         private void RunStatsCompiler()
         {
             string state;
-            if (!_stats.TryGetValue($"{SCRIPT_ID}State", out state))
+            if (!_params.TryGetValue($"{SCRIPT_ID}State", out state))
                 state = "#FFFFFF";
-            CompileStats(SCRIPT_ID, ToColor(_panelColors[state]));
+            CompileOutput(SCRIPT_ID, ToColor(_panelColors[state]));
         }
 
         // Enumerator : Poll connectors
@@ -97,7 +97,7 @@ namespace PBScripts.Independent.DockingHandler
                 if (evaluated % BATCH_SIZE_POLLING == 0)
                     yield return true;
             }
-            _stats[$"{SCRIPT_ID}ConnectorsTotal"] = _allConnectors.Count.ToString();
+            _params[$"{SCRIPT_ID}ConnectorsTotal"] = _allConnectors.Count.ToString();
             yield return true;
 
             RunStatsCompiler();
@@ -116,7 +116,7 @@ namespace PBScripts.Independent.DockingHandler
         private bool IsDockedStateChanged()
         {
             var current = _allConnectors.Where(x => x.IsConnected).ToHashSet();
-            _stats[$"{SCRIPT_ID}ConnectorsDocked"] = current.Count.ToString();
+            _params[$"{SCRIPT_ID}ConnectorsDocked"] = current.Count.ToString();
             if (current.SetEquals(_connectedLast))
                 return false;
             _connectedLast = current;
@@ -129,11 +129,11 @@ namespace PBScripts.Independent.DockingHandler
 
         private IEnumerator<bool> HandleDocking(bool isDocked = false)
         {
-            _stats[$"{SCRIPT_ID}State"] = isDocked ? "Docking" : "Undocking";
+            _params[$"{SCRIPT_ID}State"] = isDocked ? "Docking" : "Undocking";
 
             // Startup Indicators
             var indicators = FindBlocksOnSameConstruct<IMyInteriorLight>($"{SCRIPT_ID}Required", true);
-            _stats[$"{SCRIPT_ID}Indicators"] = indicators.Count.ToString();
+            _params[$"{SCRIPT_ID}Indicators"] = indicators.Count.ToString();
             foreach (var light in indicators)
             {
                 light.Color = ToColor(_indicatorColors[isDocked ? "Docking" : "Undocking"]);
@@ -149,7 +149,7 @@ namespace PBScripts.Independent.DockingHandler
 
             // Detect backup batteries
             var backupBatteries = FindBlocksOnSameConstruct<IMyBatteryBlock>($"{SCRIPT_ID}BackupBattery", true);
-            _stats[$"{SCRIPT_ID}BackupBatteries"] = backupBatteries.Count.ToString();
+            _params[$"{SCRIPT_ID}BackupBatteries"] = backupBatteries.Count.ToString();
 
             if (backupBatteries.Any())
             {
@@ -162,14 +162,14 @@ namespace PBScripts.Independent.DockingHandler
             var thrusters = FindBlocksOnSameConstruct<IMyThrust>($"{SCRIPT_ID}Ignore");
             foreach (var thruster in thrusters)
                 thruster.Enabled = !isDocked;
-            _stats[$"{SCRIPT_ID}Thrusters"] = $"{thrusters.Count}_" + (isDocked ? "Off" : "On");
+            _params[$"{SCRIPT_ID}Thrusters"] = $"{thrusters.Count}_" + (isDocked ? "Off" : "On");
             yield return true;
 
             // Handle tanks
             var tanks = FindBlocksOnSameConstruct<IMyGasTank>($"{SCRIPT_ID}Ignore");
             foreach (var tank in tanks)
                 tank.Stockpile = isDocked;
-            _stats[$"{SCRIPT_ID}Tanks"] = $"{tanks.Count}_" + (isDocked ? "Stockpiling" : "Auto");
+            _params[$"{SCRIPT_ID}Tanks"] = $"{tanks.Count}_" + (isDocked ? "Stockpiling" : "Auto");
             yield return true;
 
             // Handle primary batteries
@@ -179,7 +179,7 @@ namespace PBScripts.Independent.DockingHandler
                 if (!backupBatteries.Contains(battery))
                     battery.ChargeMode = isDocked ? ChargeMode.Recharge : ChargeMode.Auto;
             }
-            _stats[$"{SCRIPT_ID}BatteryCount"] = $"{batteries.Count}_" + (isDocked ? "Recharging" : "Auto");
+            _params[$"{SCRIPT_ID}BatteryCount"] = $"{batteries.Count}_" + (isDocked ? "Recharging" : "Auto");
             yield return true;
 
             // Handle backup batteries
@@ -188,7 +188,7 @@ namespace PBScripts.Independent.DockingHandler
             yield return true;
 
             // Final update
-            _stats[$"{SCRIPT_ID}State"] = isDocked ? "Docked" : "Undocked";
+            _params[$"{SCRIPT_ID}State"] = isDocked ? "Docked" : "Undocked";
             RunStatsCompiler();
             yield return true;
 

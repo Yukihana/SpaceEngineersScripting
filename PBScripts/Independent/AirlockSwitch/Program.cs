@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PBScripts.Independent.AutoparkConnectors
+namespace PBScripts.Independent.AirlockSwitch
 {
     internal class Program
     {
