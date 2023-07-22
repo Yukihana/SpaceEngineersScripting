@@ -15,5 +15,13 @@ namespace PBScripts._Helpers
                 enumerator = null;
             }
         }
+
+        public bool RunCoroutineOnce(IEnumerator<bool> enumerator)
+        {
+            if (enumerator.MoveNext())
+                return true;
+            enumerator.Dispose();
+            return false;
+        }
     }
 }

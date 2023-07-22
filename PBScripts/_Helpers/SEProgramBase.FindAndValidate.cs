@@ -41,6 +41,8 @@ namespace PBScripts._Helpers
             if (block == null)
                 throw new ArgumentNullException(nameof(block));
 
+            if (isWhitelistMarker && string.IsNullOrWhiteSpace(block.CustomData))
+                return false;
             if (!block.IsSameConstructAs(Me))
                 return false;
             if (!block.IsFunctional)
