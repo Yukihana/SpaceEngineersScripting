@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using VRageMath;
 
-namespace PBScripts.Monitoring.GridOxygenStorage
+namespace PBScripts.Cooperative.Monitoring.GridOxygenStorage
 {
     internal class Program : SEProgramBase
     {

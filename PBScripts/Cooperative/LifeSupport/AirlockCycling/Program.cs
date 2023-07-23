@@ -3,16 +3,18 @@ using Sandbox.ModAPI.Ingame;
 using SpaceEngineers.Game.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Eventing.Reader;
 using System.Linq;
 using VRageMath;
 
-namespace PBScripts.Independent.AirlockCycling
+namespace PBScripts.Cooperative.LifeSupport.AirlockCycling
 {
     internal class Program : SEProgramBase
     {
         public Program()
-        { Runtime.UpdateFrequency = UpdateFrequency.Update100; }
+        {
+            Runtime.UpdateFrequency = UpdateFrequency.Update100;
+            TagSelf("MultistageScript:AirlockCycling");
+        }
 
         public void Main(string argument, UpdateType updateSource)
         {
@@ -233,8 +235,8 @@ namespace PBScripts.Independent.AirlockCycling
         private bool TryToggleDoor(IMyDoor door, bool open = false)
         {
             var ready =
-                (open && door.Status == DoorStatus.Open) ||
-                (!open && door.Status == DoorStatus.Closed);
+                open && door.Status == DoorStatus.Open ||
+                !open && door.Status == DoorStatus.Closed;
             door.Enabled = !ready;
             if (ready)
                 return false;
