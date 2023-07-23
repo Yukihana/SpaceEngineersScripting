@@ -43,9 +43,9 @@ namespace PBScripts._Helpers
 
             if (isWhitelistMarker && string.IsNullOrWhiteSpace(block.CustomData))
                 return false;
-            if (!block.IsSameConstructAs(Me))
-                return false;
             if (!block.IsFunctional)
+                return false;
+            if (!block.IsSameConstructAs(Me))
                 return false;
 
             if (!string.IsNullOrWhiteSpace(selectionMarker) &&

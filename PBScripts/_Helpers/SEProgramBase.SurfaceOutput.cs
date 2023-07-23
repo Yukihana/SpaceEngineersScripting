@@ -12,17 +12,32 @@ namespace PBScripts._Helpers
 
     internal partial class SEProgramBase
     {
-        public string ModuleID = "UnnamedScript";
+        public string ModuleDisplayName = "Untitled";
         public TimeSpan OutputInterval = TimeSpan.FromSeconds(11);
         public Color _outputFontColor = Color.White;
         public readonly Dictionary<string, string> _stats = new Dictionary<string, string>();
+
+        public void DoOutput()
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine($"[{ModuleDisplayName}]");
+            sb.AppendLine();
+            foreach (var item in _stats)
+                sb.AppendLine($"[{item.Key}:{item.Value}]");
+            string output = sb.ToString();
+
+            IMyTextSurface surface0 = Me.GetSurface(0);
+            surface0.ContentType = ContentType.TEXT_AND_IMAGE;
+            surface0.FontColor = _outputFontColor;
+            surface0.WriteText(output);
+        }
 
         public IEnumerator<bool> SyncOutput()
         {
             DateTime startTime = DateTime.UtcNow;
 
             var sb = new StringBuilder();
-            sb.AppendLine($"[{ModuleID}]");
+            sb.AppendLine($"[{ModuleDisplayName}]");
             sb.AppendLine();
             foreach (var item in _stats)
                 sb.AppendLine($"[{item.Key}:{item.Value}]");

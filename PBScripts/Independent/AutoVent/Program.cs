@@ -12,7 +12,7 @@ namespace PBScripts.Independent.AutoVent
     {
         public Program()
         {
-            ModuleID = "AutoVent";
+            ModuleDisplayName = "AutoVent";
             Runtime.UpdateFrequency = UpdateFrequency.Update100;
         }
 
@@ -31,7 +31,7 @@ namespace PBScripts.Independent.AutoVent
 
             CycleCoroutine(ref _enumerator_input, () => SyncInput(), reset);
             _depressurize = _flags.Contains(DEPRESSURIZE_FLAG);
-            _stats[$"{ModuleID}IsPressurizing"] = (!_depressurize).ToString();
+            _stats[$"{ModuleDisplayName}IsPressurizing"] = (!_depressurize).ToString();
             _outputFontColor = _depressurize ? _colorDepressurizing : _colorPressurizing;
             CycleCoroutine(ref _enumerator_updater, () => UpdateVents(), reset);
             CycleCoroutine(ref _enumerator_output, () => SyncOutput(), reset);
@@ -53,7 +53,7 @@ namespace PBScripts.Independent.AutoVent
 
         private const uint BATCH_SIZE = 32;
         private const string DEPRESSURIZE_FLAG = "Depressurize";
-        private string IgnoreMarker => $"{ModuleID}Ignore";
+        private string IgnoreMarker => $"{ModuleDisplayName}Ignore";
         private readonly Color _colorPressurizing = new Color(0f, 1f, 0.5f);
         private readonly Color _colorDepressurizing = new Color(1f, 0.5f, 0.5f);
 
@@ -67,7 +67,7 @@ namespace PBScripts.Independent.AutoVent
             var vents = new List<IMyAirVent>();
             uint relevents = 0, currentIndex = 0;
             GridTerminalSystem.GetBlocksOfType(vents);
-            _stats[$"{ModuleID}TotalVents"] = vents.Count.ToString();
+            _stats[$"{ModuleDisplayName}TotalVents"] = vents.Count.ToString();
 
             yield return true;
             var ignoreMarker = IgnoreMarker;
@@ -99,12 +99,12 @@ namespace PBScripts.Independent.AutoVent
 
                 if (_evaluated % BATCH_SIZE == 0)
                 {
-                    _stats[$"{ModuleID}CurrentIndex"] = currentIndex.ToString();
+                    _stats[$"{ModuleDisplayName}CurrentIndex"] = currentIndex.ToString();
                     yield return true;
                 }
             }
 
-            _stats[$"{ModuleID}RelevantVents"] = relevents.ToString();
+            _stats[$"{ModuleDisplayName}RelevantVents"] = relevents.ToString();
         }
     }
 }
