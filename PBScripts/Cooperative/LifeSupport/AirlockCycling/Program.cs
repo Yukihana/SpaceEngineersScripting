@@ -11,10 +11,7 @@ namespace PBScripts.Cooperative.LifeSupport.AirlockCycling
     internal class Program : SEProgramBase
     {
         public Program()
-        {
-            Runtime.UpdateFrequency = UpdateFrequency.Update100;
-            TagSelf("MultistageScript:AirlockCycling");
-        }
+        { TagSelf("MultistageScript:AirlockCycling"); }
 
         public void Main(string argument, UpdateType updateSource)
         {
@@ -23,7 +20,7 @@ namespace PBScripts.Cooperative.LifeSupport.AirlockCycling
                 if (_enumerators.Any())
                     CycleAllPendingAirlocks();
                 else
-                    Me.Enabled = false;
+                    Runtime.UpdateFrequency = UpdateFrequency.None;
             }
             else if (!string.IsNullOrWhiteSpace(argument))
                 AddRoutine(argument);
@@ -32,7 +29,11 @@ namespace PBScripts.Cooperative.LifeSupport.AirlockCycling
         private readonly Dictionary<string, IEnumerator<bool>> _enumerators
             = new Dictionary<string, IEnumerator<bool>>();
 
+        // TagSelf
+
         // RunCoroutineOnce
+
+        //
 
         // Entry handlers
 
@@ -61,6 +62,7 @@ namespace PBScripts.Cooperative.LifeSupport.AirlockCycling
 
             // Initiate the routine
             _enumerators.Add(identifier, CycleAirlock(identifier, ingress));
+            Runtime.UpdateFrequency = UpdateFrequency.Update10;
         }
 
         private void CycleAllPendingAirlocks()
@@ -81,10 +83,10 @@ namespace PBScripts.Cooperative.LifeSupport.AirlockCycling
         private readonly Dictionary<int, Color> _colors = new Dictionary<int, Color>()
         {
             { 0, new Color(1f,1f,0f) }, // Lighting Default : Yellow
-            { 1, new Color(1f,1f,1f) }, // Ingress lighting : Blue
-            { 2, new Color(1f,1f,1f) }, // Egress lighting : Orange
-            { 3, new Color(1f,1f,1f) }, // Ingress indicator : Green
-            { 4, new Color(1f,1f,1f) }, // Egress indicator : Red
+            { 1, new Color(0f,0f,1f) }, // Ingress lighting : Blue
+            { 2, new Color(1f,0.5f,0f) }, // Egress lighting : Orange
+            { 3, new Color(0f,1f,0f) }, // Pressurized indicator : Green
+            { 4, new Color(1f,0f,0f) }, // Depressurized indicator : Red
         };
 
         private enum ComponentType : byte
@@ -107,27 +109,24 @@ namespace PBScripts.Cooperative.LifeSupport.AirlockCycling
             GridTerminalSystem.GetBlocksOfType<IMyTerminalBlock>(blocks, x => Validate(x, requiredTag));
             yield return true;
 
-            // Phase 0B : Sort
-            bool hasVent = false,
-               hasOuterHatch = false,
-               hasInnerHatch = false;
-            var components = SortBlocks(blocks, out hasVent, out hasOuterHatch, out hasInnerHatch);
+            // Phase 0B : Sort and check if critical components are available
+            var components = new Dictionary<IMyTerminalBlock, ComponentType>();
+            if (!SortAndQualify(blocks, components))
+                yield break;
             yield return true;
 
             // Phase 0C : Prepare runtime
-            if (!hasVent || !hasOuterHatch || !hasInnerHatch)
-                yield break;
             bool depressurize = false;
             if (ingress < 0)
                 depressurize = true;
             else if (ingress == 0)
                 depressurize = !(components.First(x => x.Value == ComponentType.Vent).Key as IMyAirVent).Depressurize;
             var lightingColor = _colors[depressurize ? 2 : 1];
-            var startingColor = _colors[depressurize ? 4 : 3];
-            var endingColor = _colors[depressurize ? 3 : 4];
+            var startingColor = _colors[depressurize ? 3 : 4];
+            var endingColor = _colors[depressurize ? 4 : 3];
             var exitDoorType = depressurize ? ComponentType.OuterHatch : ComponentType.InnerHatch;
-            var startingIndicator = depressurize ? ComponentType.IndicatorPressurized : ComponentType.IndicatorDepressurized;
-            var endingIndicator = depressurize ? ComponentType.IndicatorDepressurized : ComponentType.IndicatorPressurized;
+            var startingIndicator = depressurize ? ComponentType.IndicatorDepressurized : ComponentType.IndicatorPressurized;
+            var endingIndicator = depressurize ? ComponentType.IndicatorPressurized : ComponentType.IndicatorDepressurized;
             yield return true;
 
             // Phase 1A : Set starter lights
@@ -188,9 +187,8 @@ namespace PBScripts.Cooperative.LifeSupport.AirlockCycling
                     break;
                 yield return true;
             }
-            components.Keys
-                .OfType<IMyAirVent>()
-                .ForEach(x => x.Enabled = false);
+            foreach (var vent in components.Keys.OfType<IMyAirVent>())
+                vent.Enabled = false;
 
             // Phase 3A : Set finish lights
             foreach (var component in components.Where(x => x.Key is IMyLightingBlock))
@@ -228,6 +226,7 @@ namespace PBScripts.Cooperative.LifeSupport.AirlockCycling
         private void SetLight(IMyLightingBlock light, Color color, bool blink = false)
         {
             light.BlinkIntervalSeconds = blink ? 0.5f : 0f;
+            light.BlinkLength = 50f;
             light.Color = color;
             light.Enabled = true;
         }
@@ -273,14 +272,11 @@ namespace PBScripts.Cooperative.LifeSupport.AirlockCycling
             return block.CustomData.Contains(requiredTag);
         }
 
-        private static Dictionary<IMyTerminalBlock, ComponentType> SortBlocks(
+        private static bool SortAndQualify(
             IEnumerable<IMyTerminalBlock> blocks,
-            out bool hasVent,
-            out bool hasOuterHatch,
-            out bool hasInnerHatch)
+            Dictionary<IMyTerminalBlock, ComponentType> result)
         {
-            var result = new Dictionary<IMyTerminalBlock, ComponentType>();
-            hasVent = hasOuterHatch = hasInnerHatch = false;
+            bool hasVent = false, hasOuterHatch = false, hasInnerHatch = false;
 
             foreach (var block in blocks)
             {
@@ -318,7 +314,7 @@ namespace PBScripts.Cooperative.LifeSupport.AirlockCycling
                 if (type != ComponentType.Unknown)
                     result.Add(block, type);
             }
-            return result;
+            return hasVent && hasOuterHatch && hasInnerHatch;
         }
     }
 }
