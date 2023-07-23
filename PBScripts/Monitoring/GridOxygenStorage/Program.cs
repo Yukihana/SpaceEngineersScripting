@@ -20,16 +20,26 @@ namespace PBScripts.Monitoring.GridOxygenStorage
 
         private IEnumerator<bool> _enumerator = null;
 
-        // Coroutine
+        // CycleCoroutine
 
-        // Monitor Grid Oxygen
+        // ValidateBlockOnSameConstruct
 
-        private readonly TimeSpan INTERVAL_FIXED_MINIMUM = TimeSpan.FromMinutes(1);
-        private const int BATCH_SIZE = 20;
-        private readonly Random _random = new Random();
-        private const int INTERVAL_APPENDED_MAXIMUM = 60;
+        // SurfaceOutput
+
+        // TagSelf
+
+        // Custom Code : Monitor Grid Oxygen
+
+        private readonly List<IMyGasTank> _raw = new List<IMyGasTank>();
+        private readonly List<IMyGasTank> _tanks = new List<IMyGasTank>();
         private const string IGNORE_MARKER = "PollIgnore";
-        private readonly Color _color0 = new Color(1f, 0f, 0f);
+        private const byte BATCH_SIZE = 16;
+
+        private readonly TimeSpan INTERVAL_MINIMUM = TimeSpan.FromMinutes(1);
+        private readonly TimeSpan INTERVAL_MAXIMUM = TimeSpan.FromMinutes(2);
+        private readonly Random _random = new Random();
+
+        private readonly Color _color0 = new Color(1f, 0.25f, 0.25f);
         private readonly Color _color1 = new Color(0f, 1f, 0.5f);
 
         private IEnumerator<bool> MonitorOxygenStorage()
@@ -37,40 +47,62 @@ namespace PBScripts.Monitoring.GridOxygenStorage
             DateTime startTime = DateTime.UtcNow;
             double storedOxygen = 0f;
             double maxOxygen = 0f;
-            float oxygenPercent = 0f;
-            int count = 0;
-            var tanks = new List<IMyGasTank>();
+            float filledFactor = 0f;
+            ushort evaluated = 0;
+            int count = 0, stockpile = 0;
             yield return true;
 
             // Enumerate oxygen tanks
-            GridTerminalSystem.GetBlocksOfType(tanks,
-                x => ValidateBlockOnSameConstruct(x, $"[{IGNORE_MARKER}]")
-                && !x.BlockDefinition.SubtypeName.Contains("Hydrogen"));
+            _raw.Clear();
+            GridTerminalSystem.GetBlocksOfType(_raw);
+            yield return true;
+
+            // Filter
+            _tanks.Clear();
+            foreach (var tank in _raw)
+            {
+                unchecked { evaluated++; }
+                if (evaluated % BATCH_SIZE == 0)
+                    yield return true;
+
+                if (!ValidateBlockOnSameConstruct(tank, IGNORE_MARKER) &&
+                    tank.BlockDefinition.SubtypeName.Contains("Hydrogen"))
+                    continue;
+
+                if (tank.Stockpile)
+                    stockpile++;
+                else
+                    _tanks.Add(tank);
+            }
             yield return true;
 
             // Calculate
-            foreach (var tank in tanks.Where(x => !x.Stockpile))
+            foreach (var tank in _tanks.Where(x => !x.Stockpile))
             {
                 count++;
                 maxOxygen += tank.Capacity;
                 storedOxygen += tank.Capacity * tank.FilledRatio;
             }
-            oxygenPercent = maxOxygen == 0 ? 0f
+            filledFactor = maxOxygen == 0 ? 0f
                 : (float)(storedOxygen / maxOxygen);
-            _stats["StoredVolume"] = storedOxygen.ToString();
-            _stats["Capacity"] = maxOxygen.ToString();
-            _stats["FilledFactor"] = oxygenPercent.ToString();
-            _stats["TanksCount"] = count.ToString();
-            _stats["TanksStockpiling"] = tanks.Count(x => x.Stockpile).ToString();
-            _outputFontColor = Color.Lerp(_color0, _color1, oxygenPercent);
+            _stats["StorageFilled"] = storedOxygen.ToString();
+            _stats["StorageCapacity"] = maxOxygen.ToString();
+            _stats["FilledFactor"] = filledFactor.ToString();
+            _stats["TanksAvailable"] = count.ToString();
+            _stats["TanksStockpiling"] = stockpile.ToString();
+            _outputFontColor = Color.Lerp(_color0, _color1, filledFactor);
             yield return true;
 
+            // Fart it out
             DoOutput();
+            yield return true;
+            TagSelf("MonitorScript:GridOxygenStorage");
             yield return true;
 
             // On early finish, wait for interval
-            DateTime waitTill = startTime + INTERVAL_FIXED_MINIMUM
-                + TimeSpan.FromSeconds(_random.Next(0, INTERVAL_APPENDED_MAXIMUM));
+            DateTime waitTill = startTime + TimeSpan.FromSeconds(_random.Next(
+                (int)INTERVAL_MINIMUM.TotalSeconds,
+                (int)INTERVAL_MAXIMUM.TotalSeconds));
             while (DateTime.UtcNow < waitTill)
                 yield return true;
         }
