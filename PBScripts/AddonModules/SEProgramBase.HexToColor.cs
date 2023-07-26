@@ -1,9 +1,11 @@
-﻿using VRageMath;
+﻿using System;
+using VRageMath;
 
 namespace PBScripts._Helpers
 {
     internal partial class SEProgramBase
     {
+        [Obsolete("Use VRageMath.Color.ToColor")]
         public static Color ToColor(string hex)
         {
             return new Color(

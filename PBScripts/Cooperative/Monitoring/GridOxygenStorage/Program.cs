@@ -94,7 +94,7 @@ namespace PBScripts.Cooperative.Monitoring.GridOxygenStorage
             yield return true;
 
             // Fart it out
-            DoOutput();
+            DoManualOutput();
             yield return true;
             TagSelf("MonitorScript:GridOxygenStorage");
             yield return true;

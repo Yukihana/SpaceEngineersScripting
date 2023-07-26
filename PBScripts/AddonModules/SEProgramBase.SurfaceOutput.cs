@@ -17,7 +17,7 @@ namespace PBScripts._Helpers
         public Color _outputFontColor = Color.White;
         public readonly Dictionary<string, string> _stats = new Dictionary<string, string>();
 
-        public void DoOutput()
+        public void DoManualOutput()
         {
             var sb = new StringBuilder();
             sb.AppendLine($"[{ModuleDisplayName}]");

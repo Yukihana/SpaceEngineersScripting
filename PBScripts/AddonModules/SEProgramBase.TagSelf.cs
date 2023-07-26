@@ -11,5 +11,13 @@ namespace PBScripts._Helpers
             if (!data.Contains(tagString))
                 Me.CustomData = data.TrimEnd() + Environment.NewLine + tagString;
         }
+
+        public void TagSelf(string parameterName, string parameterValue)
+        {
+            string tag = $"[{parameterName}:{parameterValue}]";
+            string data = Me.CustomData;
+            if (!data.Contains(tag))
+                Me.CustomData = data.TrimEnd() + Environment.NewLine + tag;
+        }
     }
 }
