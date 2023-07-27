@@ -11,7 +11,7 @@ namespace PBScripts.Cooperative.Monitoring.GridOxygenStorage
     {
         public Program()
         {
-            ModuleDisplayName = "GridOxygenStorageMonitor";
+            OutputTitle = "GridOxygenStorageMonitor";
             Runtime.UpdateFrequency = UpdateFrequency.Update100;
         }
 
@@ -85,12 +85,12 @@ namespace PBScripts.Cooperative.Monitoring.GridOxygenStorage
             }
             filledFactor = maxOxygen == 0 ? 0f
                 : (float)(storedOxygen / maxOxygen);
-            _stats["StorageFilled"] = storedOxygen.ToString();
-            _stats["StorageCapacity"] = maxOxygen.ToString();
-            _stats["FilledFactor"] = filledFactor.ToString();
-            _stats["TanksAvailable"] = count.ToString();
-            _stats["TanksStockpiling"] = stockpile.ToString();
-            _outputFontColor = Color.Lerp(_color0, _color1, filledFactor);
+            OutputStats["StorageFilled"] = storedOxygen.ToString();
+            OutputStats["StorageCapacity"] = maxOxygen.ToString();
+            OutputStats["FilledFactor"] = filledFactor.ToString();
+            OutputStats["TanksAvailable"] = count.ToString();
+            OutputStats["TanksStockpiling"] = stockpile.ToString();
+            OutputFontColor = Color.Lerp(_color0, _color1, filledFactor);
             yield return true;
 
             // Fart it out

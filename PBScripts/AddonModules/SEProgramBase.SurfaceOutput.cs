@@ -12,46 +12,43 @@ namespace PBScripts._Helpers
 
     internal partial class SEProgramBase
     {
-        public string ModuleDisplayName = "Untitled";
+        public string OutputTitle = "Untitled";
         public TimeSpan OutputInterval = TimeSpan.FromSeconds(11);
-        public Color _outputFontColor = Color.White;
-        public readonly Dictionary<string, string> _stats = new Dictionary<string, string>();
+        public Color OutputFontColor = Color.White;
+        public readonly Dictionary<string, string> OutputStats = new Dictionary<string, string>();
 
-        public void DoManualOutput()
+        private StringBuilder CompileStats()
         {
             var sb = new StringBuilder();
-            sb.AppendLine($"[{ModuleDisplayName}]");
+            sb.AppendLine($"[{OutputTitle}]");
             sb.AppendLine();
-            foreach (var item in _stats)
+            foreach (var item in OutputStats)
                 sb.AppendLine($"[{item.Key}:{item.Value}]");
-            string output = sb.ToString();
-
-            IMyTextSurface surface0 = Me.GetSurface(0);
-            surface0.ContentType = ContentType.TEXT_AND_IMAGE;
-            surface0.FontColor = _outputFontColor;
-            surface0.WriteText(output);
+            return sb;
         }
 
-        public IEnumerator<bool> SyncOutput()
+        private void PostStats(StringBuilder data)
         {
-            DateTime startTime = DateTime.UtcNow;
-
-            var sb = new StringBuilder();
-            sb.AppendLine($"[{ModuleDisplayName}]");
-            sb.AppendLine();
-            foreach (var item in _stats)
-                sb.AppendLine($"[{item.Key}:{item.Value}]");
-            string output = sb.ToString();
-            yield return true;
-
-            // Post stats
             IMyTextSurface surface0 = Me.GetSurface(0);
             surface0.ContentType = ContentType.TEXT_AND_IMAGE;
-            surface0.FontColor = _outputFontColor;
-            surface0.WriteText(output);
+            surface0.FontColor = OutputFontColor;
+            surface0.WriteText(data);
+        }
 
-            while (DateTime.UtcNow - startTime < InputInterval)
-                yield return true;
+        public void DoManualOutput()
+        { PostStats(CompileStats()); }
+
+        public IEnumerator<object> SyncOutput()
+        {
+            DateTime startTime = DateTime.UtcNow;
+            var output = CompileStats();
+            yield return null;
+
+            PostStats(output);
+            yield return null;
+
+            while (DateTime.UtcNow - startTime < OutputInterval)
+                yield return null;
         }
     }
 }

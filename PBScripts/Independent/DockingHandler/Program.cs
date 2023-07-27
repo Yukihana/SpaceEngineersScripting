@@ -14,61 +14,47 @@ namespace PBScripts.Independent.DockingHandler
 
         public Program()
         {
-            TagSelf("IndependentScript", SCRIPT_ID);
             Runtime.UpdateFrequency = UpdateFrequency.Update100;
-            ModuleDisplayName = SCRIPT_ID;
+            TagSelf("IndependentScript", SCRIPT_ID);
+            OutputTitle = SCRIPT_ID;
+            OutputInterval = TimeSpan.FromSeconds(5);
         }
 
         public void Main()
         {
             bool changed = IsDockedStateChanged();
 
-            if (changed)
-                _sequenceOngoing = true;
-
-            // Handle enumerator if sequence ongoing. Reset if state changed. @10 ticks
-            // Change this to null-check with RunOnce on docking handler
-            // On docked state changed, set a new enumerator instead, dispose the old one if applicable
-            // doesn't need to run on every cycle
-            if (_sequenceOngoing)
+            if (_task != null || changed)
             {
+                RunCoroutine(ref _task, () => HandleDocking(_connectedLast.Any()), changed);
                 Runtime.UpdateFrequency = UpdateFrequency.Update10;
-                CycleCoroutine(ref _enumerator_docking, () => HandleDocking(_connectedLast.Any()), changed);
             }
 
-            // Only run connector polling if docking sequence is not active. @100 ticks
-            if (!_sequenceOngoing || !_allConnectors.Any())
+            if (_task == null || !_allConnectors.Any())
             {
                 Runtime.UpdateFrequency = UpdateFrequency.Update100;
                 CycleCoroutine(ref _enumerator_caching, () => PollConnectors());
             }
+
+            OutputStats["UpdateSpeed"] = Runtime.UpdateFrequency.ToString();
+            CycleCoroutine(ref _outputEnumerator, () => SyncOutput());
         }
 
-        private IEnumerator<bool> _enumerator_caching = null;
-        private IEnumerator<bool> _enumerator_docking = null;
+        private IEnumerator<object> _enumerator_caching = null;
+        private IEnumerator<object> _task = null;
+        private IEnumerator<object> _outputEnumerator = null;
 
-        // Shared constants
+        // Coroutines
 
-        private readonly Random _random = new Random();
+        // TagSelf
 
-        private enum DockState
-        {
-            Unknown,
-            Docking,
-            Docked,
-            Undocking,
-            Undocked,
-            Error,
-        }
+        // SurfaceOutput
 
-        private enum DockIndicatorMode
-        {
-            Disabled,
-            UnsafeDock,
-            SafeDock,
-            UnsafeUndock,
-            SafeUndock,
-        }
+        // Validate
+
+        // Cycle Coroutine
+
+        // Output Scaffold
 
         private static readonly Dictionary<DockState, Color> _outputColors = new Dictionary<DockState, Color>()
         {
@@ -80,66 +66,59 @@ namespace PBScripts.Independent.DockingHandler
             {DockState.Error, new Color(1f, 0f, 0f)},           // Red
         };
 
-        // Shared variables
-
-        private DockState _dockState = DockState.Unknown;
-        private DockIndicatorMode _dockMode = DockIndicatorMode.SafeDock;
-
-        // Cycle Coroutine (code goes here)
-
-        // To Color
-
-        // SurfaceOutput
-
         private void UpdateOutput()
         {
-            _outputFontColor = _outputColors[_dockState];
-            _params["DockedState"] = _dockState.ToString();
+            OutputFontColor = _outputColors[_dockState];
+            OutputStats["DockedState"] = _dockState.ToString();
             DoManualOutput();
         }
 
-        // Validate
-
         // Enumerator : Poll connectors
 
+        private readonly Random _random = new Random();
         private const int BATCH_SIZE = 128;
         private readonly TimeSpan INTERVAL_MINIMUM = TimeSpan.FromMinutes(5);
         private readonly TimeSpan INTERVAL_MAXIMUM = TimeSpan.FromMinutes(10);
-
         private readonly HashSet<IMyShipConnector> _allConnectors = new HashSet<IMyShipConnector>();
 
-        private IEnumerator<bool> PollConnectors()
+        private IEnumerator<object> PollConnectors()
         {
             uint evaluated = 0;
             DateTime startTime = DateTime.UtcNow;
+            string ignoreMarker = $"[{SCRIPT_ID}Ignore]";
 
-            _allConnectors.RemoveWhere(x => !ValidateBlockOnSameConstruct(x, $"{SCRIPT_ID}Ignore"));
+            if (_allConnectors.Any())
+            {
+                _allConnectors.RemoveWhere(x => !ValidateBlockOnSameConstruct(x, ignoreMarker));
+                yield return null;
+            }
+
             var raw = new List<IMyShipConnector>();
             GridTerminalSystem.GetBlocksOfType(raw);
-            yield return true;
+            yield return null;
 
             foreach (var connector in raw)
             {
                 unchecked { evaluated++; }
                 if (evaluated % BATCH_SIZE == 0)
-                    yield return true;
+                    yield return null;
 
-                if (ValidateBlockOnSameConstruct(connector, $"{SCRIPT_ID}Ignore") &&
+                if (ValidateBlockOnSameConstruct(connector, ignoreMarker) &&
                     connector.IsParkingEnabled)
                     _allConnectors.Add(connector);
             }
-            _params[$"ConnectorsTotal"] = _allConnectors.Count.ToString();
-            yield return true;
+            OutputStats[$"ConnectorsTotal"] = _allConnectors.Count.ToString();
+            yield return null;
 
             UpdateOutput();
-            yield return true;
+            yield return null;
 
             // Random wait
             DateTime waitTill = startTime + TimeSpan.FromSeconds(_random.Next(
                 (int)INTERVAL_MINIMUM.TotalSeconds,
                 (int)INTERVAL_MAXIMUM.TotalSeconds));
             while (DateTime.UtcNow < waitTill)
-                yield return true;
+                yield return null;
         }
 
         // Docking detection
@@ -149,54 +128,53 @@ namespace PBScripts.Independent.DockingHandler
         private bool IsDockedStateChanged()
         {
             var current = _allConnectors.Where(x => x.IsConnected).ToHashSet();
-            _params[$"{SCRIPT_ID}ConnectorsDocked"] = current.Count.ToString();
+            OutputStats[$"{SCRIPT_ID}ConnectorsDocked"] = current.Count.ToString();
             if (current.SetEquals(_connectedLast))
                 return false;
             _connectedLast = current;
             return true;
         }
 
-        private bool _sequenceOngoing = false;
-
         // Routine
 
-        private enum ComponentType
-        {
-            Unspecified,
-            BackupBattery,
-            Indicator,
-        }
+        private enum DockState
+        { Unknown, Docking, Docked, Undocking, Undocked, Error, }
 
-        private IEnumerator<bool> HandleDocking(bool isDocked = false)
+        private enum DockIndicatorMode
+        { Disabled, UnsafeDock, SafeDock, UnsafeUndock, SafeUndock, }
+
+        private DockState _dockState = DockState.Unknown;
+
+        private IEnumerator<object> HandleDocking(bool isDocked = false)
         {
             // 0A : Prepare output
             _dockState = isDocked ? DockState.Docking : DockState.Undocking;
             UpdateOutput();
-            yield return true;
+            yield return null;
 
             // 0B : Get blocks on the ship
-            string ignoreTag = $"{SCRIPT_ID}Ignore";
+            string ignoreTag = $"[{SCRIPT_ID}Ignore]";
             var blocks = new List<IMyTerminalBlock>();
             GridTerminalSystem.GetBlocksOfType(blocks, x => ValidateBlockOnSameConstruct(x, ignoreTag));
-            yield return true;
+            yield return null;
 
             // 0C : Sort for relevant components
             var components = FilterAndSort(blocks);
-            yield return true;
+            yield return null;
 
             // 0D : Misc
             int count;
 
             // 1A : Startup Indicators
             count = SetIndicators(components, isDocked ? DockIndicatorMode.UnsafeDock : DockIndicatorMode.UnsafeUndock);
-            _params["Indicators"] = count.ToString();
-            yield return true;
+            OutputStats["Indicators"] = count.ToString();
+            yield return null;
 
             // 1B : Detect backup batteries
             count = components.Count(x => x.Value == ComponentType.BackupBattery);
             if (count > 0)
                 SetIndicators(components, isDocked ? DockIndicatorMode.SafeDock : DockIndicatorMode.SafeUndock);
-            _params["BackupBatteries"] = count.ToString();
+            OutputStats["BackupBatteries"] = count.ToString();
 
             // 2A : Handle thrusters
             count = 0;
@@ -205,8 +183,8 @@ namespace PBScripts.Independent.DockingHandler
                 thruster.Enabled = !isDocked;
                 count++;
             }
-            _params["Thrusters"] = $"{count}_" + (isDocked ? "Off" : "On");
-            yield return true;
+            OutputStats["Thrusters"] = $"{count}_" + (isDocked ? "Off" : "On");
+            yield return null;
 
             // 2B : Handle gyroscopes
             count = 0;
@@ -215,8 +193,8 @@ namespace PBScripts.Independent.DockingHandler
                 gyro.Enabled = !isDocked;
                 count++;
             }
-            _params["Gyroscopes"] = $"{count}_" + (isDocked ? "Off" : "On");
-            yield return true;
+            OutputStats["Gyroscopes"] = $"{count}_" + (isDocked ? "Off" : "On");
+            yield return null;
 
             // 2C : Handle tanks
             count = 0;
@@ -225,8 +203,8 @@ namespace PBScripts.Independent.DockingHandler
                 tank.Stockpile = isDocked;
                 count++;
             }
-            _params["GasTanks"] = $"{count}_" + (isDocked ? "Stockpiling" : "Auto");
-            yield return true;
+            OutputStats["GasTanks"] = $"{count}_" + (isDocked ? "Stockpiling" : "Auto");
+            yield return null;
 
             // 2D : Handle reflectors
             count = 0;
@@ -236,8 +214,8 @@ namespace PBScripts.Independent.DockingHandler
                     reflector.Enabled = false;
                 count++;
             }
-            _params["Reflectors"] = $"{count}_" + (isDocked ? "Off" : "Free");
-            yield return true;
+            OutputStats["Reflectors"] = $"{count}_" + (isDocked ? "Off" : "Free");
+            yield return null;
 
             // 3A : PrimaryBatteries
             count = 0;
@@ -246,31 +224,35 @@ namespace PBScripts.Independent.DockingHandler
                 battery.ChargeMode = isDocked ? ChargeMode.Recharge : ChargeMode.Auto;
                 count++;
             }
-            _params["BatteryCount"] = $"{count}_" + (isDocked ? "Recharging" : "Auto");
-            yield return true;
+            OutputStats["BatteryCount"] = $"{count}_" + (isDocked ? "Recharging" : "Auto");
+            yield return null;
 
             // 3B : BackupBatteries
             foreach (var battery in components.Where(x => x.Value == ComponentType.BackupBattery).Select(x => x.Key as IMyBatteryBlock))
                 battery.ChargeMode = isDocked ? ChargeMode.Auto : ChargeMode.Recharge;
-            yield return true;
+            yield return null;
 
             // 4A : Final update
             _dockState = isDocked ? DockState.Docked : DockState.Undocked;
             UpdateOutput();
-            yield return true;
+            yield return null;
 
             // 4B : Handle lights
             SetIndicators(components, DockIndicatorMode.Disabled);
-
-            // Finish
-            _sequenceOngoing = false;
         }
 
         // Subroutines
 
+        private enum ComponentType
+        {
+            Unspecified,
+            BackupBattery,
+            Indicator,
+        }
+
         private Dictionary<IMyTerminalBlock, ComponentType> FilterAndSort(IEnumerable<IMyTerminalBlock> blocks)
         {
-            var indicatorMarker = $"[{SCRIPT_ID}Indicators]";
+            var indicatorMarker = $"[{SCRIPT_ID}Indicator]";
             var backupBatteryMarker = $"[{SCRIPT_ID}BackupBattery]";
             var result = new Dictionary<IMyTerminalBlock, ComponentType>();
             foreach (var block in blocks)
