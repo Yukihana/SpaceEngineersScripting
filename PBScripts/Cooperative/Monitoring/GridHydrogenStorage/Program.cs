@@ -2,13 +2,14 @@
 using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using VRageMath;
 
-namespace PBScripts.Cooperative.Monitoring.GridOxygenStorage
+namespace PBScripts.Cooperative.Monitoring.GridHydrogenStorage
 {
     internal class Program : SEProgramBase
     {
-        private const string SCRIPT_ID = "GridOxygenStorage";
+        private const string SCRIPT_ID = "GridHydrogenStorage";
 
         public Program()
         {
@@ -22,13 +23,13 @@ namespace PBScripts.Cooperative.Monitoring.GridOxygenStorage
 
         private IEnumerator<object> _enumerator = null;
 
-        // TagSelf
-
         // CycleCoroutine
 
         // ValidateBlockOnSameConstruct
 
         // SurfaceOutput
+
+        // TagSelf
 
         // Required
 
@@ -68,7 +69,7 @@ namespace PBScripts.Cooperative.Monitoring.GridOxygenStorage
                     yield return true;
 
                 if (!ValidateBlockOnSameConstruct(tank, IGNORE_MARKER) ||
-                    tank.BlockDefinition.SubtypeName.Contains("Hydrogen"))
+                    !tank.BlockDefinition.SubtypeName.Contains("Hydrogen"))
                     continue;
 
                 if (tank.Stockpile)
@@ -88,8 +89,8 @@ namespace PBScripts.Cooperative.Monitoring.GridOxygenStorage
             float filledFactor = capacity == 0 ? 0f
                 : (float)(stored / capacity);
             OutputStats["FilledFactor"] = filledFactor.ToString();
-            OutputStats["OxygenStored"] = stored.ToString();
-            OutputStats["OxygenCapacity"] = capacity.ToString();
+            OutputStats["HydrogenStored"] = stored.ToString();
+            OutputStats["HydrogenCapacity"] = capacity.ToString();
             OutputStats["TanksAvailable"] = count.ToString();
             OutputStats["TanksStockpiling"] = stockpiling.ToString();
 
