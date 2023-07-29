@@ -123,13 +123,13 @@ namespace PBScripts.Independent.DockingHandler
 
         // Docking detection
 
-        private HashSet<IMyShipConnector> _connectedLast = new HashSet<IMyShipConnector>();
+        private HashSet<IMyShipConnector> _connectedLast = null;
 
         private bool IsDockedStateChanged()
         {
             var current = _allConnectors.Where(x => x.IsConnected).ToHashSet();
-            OutputStats[$"{SCRIPT_ID}ConnectorsDocked"] = current.Count.ToString();
-            if (current.SetEquals(_connectedLast))
+            OutputStats[$"ConnectorsDocked"] = current.Count.ToString();
+            if (_connectedLast?.SetEquals(current) == true) // To detect first run: "null"
                 return false;
             _connectedLast = current;
             return true;

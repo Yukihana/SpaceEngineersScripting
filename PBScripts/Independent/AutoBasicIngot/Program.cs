@@ -13,7 +13,7 @@ namespace PBScripts.Independent.AutoBasicIngot
 
         private Program()
         {
-            OutputTitle = "Survival Kit Production Autoqueue";
+            OutputTitle = $"{SCRIPT_ID} (Survival Kits)";
             Runtime.UpdateFrequency = UpdateFrequency.Update100;
         }
 
@@ -34,9 +34,9 @@ namespace PBScripts.Independent.AutoBasicIngot
         private const uint BATCH_SIZE = 4;
         private readonly string IGNORE_MARKER = $"[{SCRIPT_ID}Ignore]";
 
+        private const string SurvivalKitTypeIdString = "MyObjectBuilder_SurvivalKit";
         private const string BasicIngotDefinitionIdString = "MyObjectBuilder_BlueprintDefinition/StoneOreToIngotBasic";
         private readonly MyDefinitionId BasicIngotDefinitionId = MyDefinitionId.Parse(BasicIngotDefinitionIdString);
-        private const string SurvivalKitTypeIdString = "MyObjectBuilder_SurvivalKit";
         private const uint QueueAmountMax = 9000;
 
         private readonly List<IMyProductionBlock> _productionBlocks = new List<IMyProductionBlock>();
