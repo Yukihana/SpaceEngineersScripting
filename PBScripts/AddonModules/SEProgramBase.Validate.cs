@@ -23,7 +23,7 @@ namespace PBScripts.AddonModules
                 return false;
 
             if (!string.IsNullOrWhiteSpace(selectionMarker) &&
-                block.CustomData.Contains($"{selectionMarker}") != isWhitelistMarker)
+                block.CustomData.Contains(selectionMarker) != isWhitelistMarker)
                 return false;
 
             return true;

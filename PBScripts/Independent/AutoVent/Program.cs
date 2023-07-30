@@ -31,13 +31,17 @@ namespace PBScripts.Independent.AutoVent
 
         private IEnumerator<object> _enumerator = null;
 
-        // SurfaceInput
+        // TagSelf
 
-        // SurfaceOuput
+        // ScriptInput
+
+        // ScriptOuput
 
         // CycleCoroutine
 
         // Validate
+
+        // TryClampF
 
         // Run by trigger
 
@@ -73,8 +77,8 @@ namespace PBScripts.Independent.AutoVent
         private const string KEY_UPPERTHRESHOLD = "UpperThreshold";
         private const float OXYGEN_LOWER_DEFAULT = 0.75f;
         private const float OXYGEN_UPPER_DEFAULT = 0.98f;
+        private readonly Color Color0 = new Color(0.25f, 0.5f, 1f);
         private readonly Color Color1 = new Color(0f, 1f, 0.5f);
-        private readonly Color Color0 = new Color(1f, 0.5f, 0.5f);
 
         private readonly List<IMyAirVent> _vents = new List<IMyAirVent>();
 
@@ -122,9 +126,9 @@ namespace PBScripts.Independent.AutoVent
 
             if (requiresUpdate)
             {
-                OutputStats[KEY_DEPRESSURIZE] = depressurize.ToString();
-                OutputStats[KEY_LOWERTHRESHOLD] = lowerThreshold.ToString();
-                OutputStats[KEY_UPPERTHRESHOLD] = upperThreshold.ToString();
+                InputParameters[KEY_DEPRESSURIZE] = depressurize.ToString();
+                InputParameters[KEY_LOWERTHRESHOLD] = lowerThreshold.ToString();
+                InputParameters[KEY_UPPERTHRESHOLD] = upperThreshold.ToString();
                 UpdateConfig();
             }
             yield return null;
@@ -149,15 +153,14 @@ namespace PBScripts.Independent.AutoVent
                     continue;
 
                 count++;
-                if (_depressurize)
-                {
-                    vent.Depressurize = true;
-                    vent.Enabled = vent.GetOxygenLevel() > 0f;
-                }
+                vent.Enabled = true; // Enable to scan info (fans report zero if not)
+                vent.Depressurize = depressurize;
+                var level = vent.GetOxygenLevel();
+
+                if (depressurize)
+                    vent.Enabled = level > 0f;
                 else
                 {
-                    vent.Depressurize = false;
-                    var level = vent.GetOxygenLevel();
                     if (level >= upperThreshold)
                         vent.Enabled = false;
                     else if (level <= lowerThreshold)
@@ -176,6 +179,7 @@ namespace PBScripts.Independent.AutoVent
             OutputStats["VentsTotal"] = count.ToString();
             OutputStats["VentsEnabled"] = enabledCount.ToString();
             OutputStats["VentsDepressurizing"] = depressurizingCount.ToString();
+            OutputStats["UpdateGuid"] = _evaluated.ToString();
             OutputFontColor = depressurize ? Color0 : Color1;
             yield return null;
 

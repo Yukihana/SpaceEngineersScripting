@@ -176,7 +176,7 @@ namespace PBScripts.Cooperative.LifeSupport.AirlockCycling
                 // Process vents
                 float o2Level;
                 if (!monitorAvailable ||
-                    !GetScriptData(oxygenMonitor, "FilledFactor", out o2Level))
+                    !GetOutput(oxygenMonitor, "FilledFactor", out o2Level))
                     o2Level = 0.5f;
                 var cleared = components
                     .Keys.OfType<IMyAirVent>()

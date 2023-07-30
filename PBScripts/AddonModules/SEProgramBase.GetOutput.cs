@@ -36,7 +36,7 @@ namespace PBScripts.AddonModules
             return result;
         }
 
-        public bool GetScriptData(IMyProgrammableBlock script, string parameterName, out string result)
+        public bool GetOutput(IMyProgrammableBlock script, string parameterName, out string result)
         {
             var regex = GetPollRegex(parameterName);
             var sb = new StringBuilder();
@@ -48,7 +48,7 @@ namespace PBScripts.AddonModules
             return match.Success;
         }
 
-        public bool GetScriptData(IMyProgrammableBlock script, string parameterName, out float result)
+        public bool GetOutput(IMyProgrammableBlock script, string parameterName, out float result)
         {
             var regex = GetPollRegex(parameterName);
             var sb = new StringBuilder();
