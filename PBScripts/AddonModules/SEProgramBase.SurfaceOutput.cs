@@ -5,7 +5,7 @@ using System.Text;
 using VRage.Game.GUI.TextPanel;
 using VRageMath;
 
-namespace PBScripts._Helpers
+namespace PBScripts.AddonModules
 {
     // Surface0 : Stats
     // Do not use Me.CustomData in this script.

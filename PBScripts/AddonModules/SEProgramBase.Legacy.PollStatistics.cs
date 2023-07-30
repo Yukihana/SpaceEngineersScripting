@@ -1,7 +1,7 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System.Collections.Generic;
 
-namespace PBScripts._Helpers
+namespace PBScripts.AddonModules
 {
     internal partial class SEProgramBase
     {

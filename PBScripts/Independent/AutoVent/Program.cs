@@ -1,6 +1,7 @@
-﻿using PBScripts._Helpers;
+﻿using PBScripts.AddonModules;
 using Sandbox.ModAPI.Ingame;
 using SpaceEngineers.Game.ModAPI;
+using System;
 using System.Collections.Generic;
 using VRageMath;
 
@@ -10,36 +11,25 @@ namespace PBScripts.Independent.AutoVent
     // This script should not have a fixed minimum interval
     internal class Program : SEProgramBase
     {
+        private const string SCRIPT_ID = "AutoVent";
+
         public Program()
         {
-            OutputTitle = "AutoVent";
+            OutputTitle = $"LifeSupport-{SCRIPT_ID}";
+            TagSelf($"LifeSupportScript", SCRIPT_ID);
             Runtime.UpdateFrequency = UpdateFrequency.Update100;
         }
 
         public void Main(string argument, UpdateType updateSource)
         {
-            bool reset = false;
             if (updateSource == UpdateType.Trigger ||
                 updateSource == UpdateType.Terminal)
-            {
-                if (string.IsNullOrEmpty(argument))
-                    reset = true;
-                else
-                    ProcessArgument(argument);
-                return;
-            }
-
-            CycleCoroutine(ref _enumerator_input, () => SyncInput(), reset);
-            _depressurize = _flags.Contains(DEPRESSURIZE_FLAG);
-            OutputStats[$"{OutputTitle}IsPressurizing"] = (!_depressurize).ToString();
-            OutputFontColor = _depressurize ? _colorDepressurizing : _colorPressurizing;
-            CycleCoroutine(ref _enumerator_updater, () => UpdateVents(), reset);
-            CycleCoroutine(ref _enumerator_output, () => SyncOutput(), reset);
+                HandleTriggerInput(argument);
+            else
+                CycleCoroutine(ref _enumerator, () => UpdateVents());
         }
 
-        private IEnumerator<bool> _enumerator_updater = null;
-        private IEnumerator<bool> _enumerator_output = null;
-        private IEnumerator<bool> _enumerator_input = null;
+        private IEnumerator<object> _enumerator = null;
 
         // SurfaceInput
 
@@ -49,62 +39,157 @@ namespace PBScripts.Independent.AutoVent
 
         // Validate
 
-        // Shared parameters
+        // Run by trigger
 
-        private const uint BATCH_SIZE = 32;
-        private const string DEPRESSURIZE_FLAG = "Depressurize";
-        private string IgnoreMarker => $"{OutputTitle}Ignore";
-        private readonly Color _colorPressurizing = new Color(0f, 1f, 0.5f);
-        private readonly Color _colorDepressurizing = new Color(1f, 0.5f, 0.5f);
-
-        private uint _evaluated = 0;
         private bool _depressurize = false;
-        private const float OXYGEN_MAX = 0.98f;
-        private const float OXYGEN_MIN = 0.75f;
 
-        private IEnumerator<bool> UpdateVents()
+        private void HandleTriggerInput(string argument)
         {
-            var vents = new List<IMyAirVent>();
-            uint relevents = 0, currentIndex = 0;
-            GridTerminalSystem.GetBlocksOfType(vents);
-            OutputStats[$"{OutputTitle}TotalVents"] = vents.Count.ToString();
+            ProcessArgument(argument);
 
-            yield return true;
-            var ignoreMarker = IgnoreMarker;
-
-            foreach (var vent in vents)
+            // In case of state change, dispose the current routine.
+            string valueString; bool depressurize;
+            if (InputParameters.TryGetValue(KEY_DEPRESSURIZE, out valueString) &&
+                bool.TryParse(valueString, out depressurize) &&
+                depressurize != _depressurize)
             {
-                unchecked { _evaluated++; }
-                currentIndex++;
+                _enumerator.Dispose();
+                _enumerator = null;
+            }
+        }
 
-                if (ValidateBlockOnSameConstruct(vent, ignoreMarker))
-                {
-                    relevents++;
+        // Required
 
-                    if (_depressurize)
-                    {
-                        vent.Depressurize = true;
-                        vent.Enabled = vent.GetOxygenLevel() > 0f;
-                    }
-                    else
-                    {
-                        vent.Depressurize = false;
-                        var level = vent.GetOxygenLevel();
-                        if (level >= OXYGEN_MAX)
-                            vent.Enabled = false;
-                        else if (level <= OXYGEN_MIN)
-                            vent.Enabled = true;
-                    }
-                }
+        private readonly Random _random = new Random();
+        private readonly TimeSpan INTERVAL_MINIMUM = TimeSpan.FromSeconds(20);
+        private readonly TimeSpan INTERVAL_MAXIMUM = TimeSpan.FromSeconds(40);
 
-                if (_evaluated % BATCH_SIZE == 0)
-                {
-                    OutputStats[$"{OutputTitle}CurrentIndex"] = currentIndex.ToString();
-                    yield return true;
-                }
+        private readonly string IGNORE_MARKER = $"[{SCRIPT_ID}Ignore]";
+        private const uint BATCH_SIZE = 16;
+        private ushort _evaluated = 0;
+
+        private const string KEY_DEPRESSURIZE = "Depressurize";
+        private const string KEY_LOWERTHRESHOLD = "LowerThreshold";
+        private const string KEY_UPPERTHRESHOLD = "UpperThreshold";
+        private const float OXYGEN_LOWER_DEFAULT = 0.75f;
+        private const float OXYGEN_UPPER_DEFAULT = 0.98f;
+        private readonly Color Color1 = new Color(0f, 1f, 0.5f);
+        private readonly Color Color0 = new Color(1f, 0.5f, 0.5f);
+
+        private readonly List<IMyAirVent> _vents = new List<IMyAirVent>();
+
+        // Routine
+
+        private IEnumerator<object> UpdateVents()
+        {
+            Runtime.UpdateFrequency = UpdateFrequency.Update10;
+            DateTime startTime = DateTime.UtcNow;
+
+            string valueString;
+            bool depressurize;
+            float lowerThreshold, upperThreshold;
+            bool requiresUpdate = false;
+            yield return null;
+
+            // Config in a frame
+            ReadConfig();
+
+            if (!(InputParameters.TryGetValue(KEY_DEPRESSURIZE, out valueString) &&
+                bool.TryParse(valueString, out depressurize)))
+            {
+                depressurize = false;
+                _depressurize = depressurize;
+                requiresUpdate = true;
             }
 
-            OutputStats[$"{OutputTitle}RelevantVents"] = relevents.ToString();
+            if (!(InputParameters.TryGetValue(KEY_LOWERTHRESHOLD, out valueString) &&
+                float.TryParse(valueString, out lowerThreshold)))
+            {
+                lowerThreshold = OXYGEN_LOWER_DEFAULT;
+                requiresUpdate = true;
+            }
+            else if (TryClampF(ref lowerThreshold, 0f, 1f))
+                requiresUpdate = true;
+
+            if (!(InputParameters.TryGetValue(KEY_UPPERTHRESHOLD, out valueString) &&
+                float.TryParse(valueString, out upperThreshold)))
+            {
+                upperThreshold = OXYGEN_UPPER_DEFAULT;
+                requiresUpdate = true;
+            }
+            else if (TryClampF(ref upperThreshold, lowerThreshold, 1f))
+                requiresUpdate = true;
+
+            if (requiresUpdate)
+            {
+                OutputStats[KEY_DEPRESSURIZE] = depressurize.ToString();
+                OutputStats[KEY_LOWERTHRESHOLD] = lowerThreshold.ToString();
+                OutputStats[KEY_UPPERTHRESHOLD] = upperThreshold.ToString();
+                UpdateConfig();
+            }
+            yield return null;
+
+            // Get Vents
+            _vents.Clear();
+            GridTerminalSystem.GetBlocksOfType(_vents);
+            yield return null;
+
+            // Enumerate to validate
+            int count = 0,
+                enabledCount = 0,
+                depressurizingCount = 0;
+            foreach (var vent in _vents)
+            {
+                unchecked { _evaluated++; }
+                if (_evaluated % BATCH_SIZE == 0)
+                    yield return null;
+
+                if (!ValidateBlockOnSameConstruct(vent, IGNORE_MARKER) ||
+                    vent.CustomData.Contains("[AirlockComponent:"))
+                    continue;
+
+                count++;
+                if (_depressurize)
+                {
+                    vent.Depressurize = true;
+                    vent.Enabled = vent.GetOxygenLevel() > 0f;
+                }
+                else
+                {
+                    vent.Depressurize = false;
+                    var level = vent.GetOxygenLevel();
+                    if (level >= upperThreshold)
+                        vent.Enabled = false;
+                    else if (level <= lowerThreshold)
+                        vent.Enabled = true;
+                }
+
+                if (vent.Enabled)
+                    enabledCount++;
+                if (vent.Depressurize)
+                    depressurizingCount++;
+            }
+            yield return null;
+
+            // Calculate
+            OutputStats["IsDepressurizing"] = depressurize.ToString();
+            OutputStats["VentsTotal"] = count.ToString();
+            OutputStats["VentsEnabled"] = enabledCount.ToString();
+            OutputStats["VentsDepressurizing"] = depressurizingCount.ToString();
+            OutputFontColor = depressurize ? Color0 : Color1;
+            yield return null;
+
+            // Output
+            DoManualOutput();
+            yield return true;
+
+            // On early finish, wait for interval
+            Runtime.UpdateFrequency = UpdateFrequency.Update100;
+            DateTime waitTill = startTime + TimeSpan.FromSeconds(_random.Next(
+                (int)INTERVAL_MINIMUM.TotalSeconds,
+                (int)INTERVAL_MAXIMUM.TotalSeconds));
+            while (DateTime.UtcNow < waitTill)
+                yield return null;
         }
     }
 }

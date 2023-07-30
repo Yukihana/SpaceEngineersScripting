@@ -1,4 +1,4 @@
-﻿using PBScripts._Helpers;
+﻿using PBScripts.AddonModules;
 using Sandbox.ModAPI.Ingame;
 using SpaceEngineers.Game.ModAPI.Ingame;
 using System;
@@ -26,8 +26,8 @@ namespace PBScripts.Cooperative.LifeSupport.AirlockCycling
                 AddRoutine(argument);
         }
 
-        private readonly Dictionary<string, IEnumerator<bool>> _enumerators
-            = new Dictionary<string, IEnumerator<bool>>();
+        private readonly Dictionary<string, IEnumerator<object>> _enumerators
+            = new Dictionary<string, IEnumerator<object>>();
 
         // TagSelf
 
@@ -70,7 +70,7 @@ namespace PBScripts.Cooperative.LifeSupport.AirlockCycling
             var keysToRemove = new List<string>();
             foreach (var enumerator in _enumerators)
             {
-                if (!RunCoroutineOnce(enumerator.Value))
+                if (!RunCoroutine(enumerator.Value))
                     keysToRemove.Add(enumerator.Key);
             }
 
@@ -101,19 +101,19 @@ namespace PBScripts.Cooperative.LifeSupport.AirlockCycling
             Lighting,
         }
 
-        private IEnumerator<bool> CycleAirlock(string identifier, sbyte ingress)
+        private IEnumerator<object> CycleAirlock(string identifier, sbyte ingress)
         {
             // Phase 0A : Get
             string requiredTag = $"[AirlockComponent:{identifier}]";
             var blocks = new List<IMyTerminalBlock>();
             GridTerminalSystem.GetBlocksOfType<IMyTerminalBlock>(blocks, x => Validate(x, requiredTag));
-            yield return true;
+            yield return null;
 
             // Phase 0B : Sort and check if critical components are available
             var components = new Dictionary<IMyTerminalBlock, ComponentType>();
             if (!SortAndQualify(blocks, components))
                 yield break;
-            yield return true;
+            yield return null;
 
             // Phase 0C : Prepare runtime
             bool depressurize = false;
@@ -127,7 +127,7 @@ namespace PBScripts.Cooperative.LifeSupport.AirlockCycling
             var exitDoorType = depressurize ? ComponentType.OuterHatch : ComponentType.InnerHatch;
             var startingIndicator = depressurize ? ComponentType.IndicatorDepressurized : ComponentType.IndicatorPressurized;
             var endingIndicator = depressurize ? ComponentType.IndicatorPressurized : ComponentType.IndicatorDepressurized;
-            yield return true;
+            yield return null;
 
             // Phase 1A : Set starter lights
             foreach (var component in components.Where(x => x.Key is IMyLightingBlock))
@@ -140,13 +140,13 @@ namespace PBScripts.Cooperative.LifeSupport.AirlockCycling
                 else if (component.Value == ComponentType.Lighting)
                     SetLight(light, _colors[0]);
             }
-            yield return true;
+            yield return null;
 
             // Phase 1B : Wait for all doors to close
             while (components
                 .Keys.OfType<IMyDoor>()
                 .Count(door => TryToggleDoor(door)) != 0)
-                yield return true;
+                yield return null;
 
             // Phase 2A : Set operation lights
             foreach (var component in components.Where(x => x.Key is IMyLightingBlock))
@@ -157,7 +157,7 @@ namespace PBScripts.Cooperative.LifeSupport.AirlockCycling
                 else
                     light.Enabled = false;
             }
-            yield return true;
+            yield return null;
 
             // Phase 2B : Vent
             IMyProgrammableBlock oxygenMonitor = null;
@@ -185,7 +185,7 @@ namespace PBScripts.Cooperative.LifeSupport.AirlockCycling
                 // Pre min, wait anyway
                 if (now > waitMin && cleared)
                     break;
-                yield return true;
+                yield return null;
             }
             foreach (var vent in components.Keys.OfType<IMyAirVent>())
                 vent.Enabled = false;
@@ -201,13 +201,13 @@ namespace PBScripts.Cooperative.LifeSupport.AirlockCycling
                 else if (component.Value == ComponentType.Lighting)
                     SetLight(light, _colors[0]);
             }
-            yield return true;
+            yield return null;
 
             // Phase 4 : Wait for exit doors to open
             while (components
                 .Where(x => x.Value == exitDoorType)
                 .Count(x => TryToggleDoor(x.Key as IMyDoor, true)) != 0)
-                yield return true;
+                yield return null;
 
             // Phase 5 : Finish
             foreach (var component in components.Where(x => x.Key is IMyLightingBlock))
@@ -218,7 +218,7 @@ namespace PBScripts.Cooperative.LifeSupport.AirlockCycling
                 else
                     light.Enabled = false;
             }
-            yield return true;
+            yield return null;
         }
 
         // Setters

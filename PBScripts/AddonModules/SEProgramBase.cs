@@ -1,6 +1,6 @@
 ﻿using Sandbox.ModAPI.Ingame;
 
-namespace PBScripts._Helpers
+namespace PBScripts.AddonModules
 {
     // Base class for adding shared helper methods.
     // Copy respective helper methods to PBs as required.

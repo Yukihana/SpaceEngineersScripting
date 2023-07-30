@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace PBScripts._Helpers
+namespace PBScripts.AddonModules
 {
     internal partial class SEProgramBase
     {

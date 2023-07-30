@@ -1,4 +1,4 @@
-﻿using PBScripts._Helpers;
+﻿using PBScripts.AddonModules;
 using Sandbox.ModAPI.Ingame;
 
 namespace PBScripts.LegacyScripts.TestScript

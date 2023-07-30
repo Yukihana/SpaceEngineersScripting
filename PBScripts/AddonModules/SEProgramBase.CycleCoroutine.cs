@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
-namespace PBScripts._Helpers
+namespace PBScripts.AddonModules
 {
     internal partial class SEProgramBase
     {
@@ -33,6 +33,14 @@ namespace PBScripts._Helpers
             return false;
         }
 
+        public bool RunCoroutine(IEnumerator<object> enumerator)
+        {
+            if (enumerator.MoveNext())
+                return true;
+            enumerator.Dispose();
+            return false;
+        }
+
         [Obsolete]
         public void CycleCoroutine(ref IEnumerator<bool> enumerator, Func<IEnumerator<bool>> enumeratorFactory, bool reset = false)
         {
@@ -43,15 +51,6 @@ namespace PBScripts._Helpers
                 enumerator.Dispose();
                 enumerator = null;
             }
-        }
-
-        [Obsolete]
-        public bool RunCoroutineOnce(IEnumerator<bool> enumerator)
-        {
-            if (enumerator.MoveNext())
-                return true;
-            enumerator.Dispose();
-            return false;
         }
     }
 }

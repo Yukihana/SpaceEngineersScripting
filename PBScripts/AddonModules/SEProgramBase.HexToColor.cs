@@ -1,7 +1,7 @@
 ﻿using System;
 using VRageMath;
 
-namespace PBScripts._Helpers
+namespace PBScripts.AddonModules
 {
     internal partial class SEProgramBase
     {
