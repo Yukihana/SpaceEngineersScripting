@@ -112,7 +112,7 @@ namespace PBScripts.Monitoring.GridSolarPower
             OutputStats["EfficiencyActual"] = actualEfficiency.ToString();
             OutputStats["EfficiencyVariance"] = variance.ToString();
             OutputStats["EfficiencyDeviance"] = deviance.ToString();
-            OutputStats["UpdateGuid"] = _evaluated.ToString();
+            OutputStats["UpdateIndex"] = _evaluated.ToString();
             OutputFontColor = Color.Lerp(Color0, Color1, efficiency);
             yield return null;
 

@@ -179,7 +179,7 @@ namespace PBScripts.Independent.AutoVent
             OutputStats["VentsTotal"] = count.ToString();
             OutputStats["VentsEnabled"] = enabledCount.ToString();
             OutputStats["VentsDepressurizing"] = depressurizingCount.ToString();
-            OutputStats["UpdateGuid"] = _evaluated.ToString();
+            OutputStats["UpdateIndex"] = _evaluated.ToString();
             OutputFontColor = depressurize ? Color0 : Color1;
             yield return null;
 

@@ -89,7 +89,7 @@ namespace PBScripts.Independent.AutoTurnOff
             unchecked { _total += count; }
             OutputStats["BlocksDisabledThisCycle"] = count.ToString();
             OutputStats["BlocksDisabledTotal"] = _total.ToString();
-            OutputStats["CycleGuid"] = _evaluated.ToString();
+            OutputStats["UpdateIndex"] = _evaluated.ToString();
             DoManualOutput();
             yield return null;
 
