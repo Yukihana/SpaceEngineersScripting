@@ -132,16 +132,16 @@ namespace PBScripts.Cooperative.LifeSupport.SmartGreenhouse
 
             OutputStats["FarmingAllowed"] = canFarm.ToString();
             OutputStats["ActivationThreshold"] = EFFICIENCY_MINIMUM.ToString();
-            OutputStats["Efficiency"] = efficiency.ToString("F3");
-            OutputStats["EnabledFactor"] = (count > 0 ? activeCount / (float)count : 0).ToString("F3");
+            OutputStats["Efficiency"] = efficiency.ToString("0.###");
+            OutputStats["EnabledFactor"] = (count > 0 ? activeCount / (float)count : 0).ToString("0.###");
 
             OutputStats["FarmsTotal"] = count.ToString();
             OutputStats["FarmsActive"] = activeCount.ToString();
-            OutputStats["OutputCurrent"] = farmCurrent.ToString("F3") + " L";
-            OutputStats["OutputMaximum"] = farmMaximum.ToString("F3") + " L";
+            OutputStats["OutputCurrent"] = farmCurrent.ToString("0.###") + " L";
+            OutputStats["OutputMaximum"] = farmMaximum.ToString("0.###") + " L";
 
-            OutputStats["InputPowerFactor"] = (gridPowerFactor >= 0 ? gridPowerFactor : 0).ToString("F3");
-            OutputStats["InputOxygenFactor"] = gridOxygenFactor.ToString("F3");
+            OutputStats["InputPowerFactor"] = (gridPowerFactor >= 0 ? gridPowerFactor : 0).ToString("0.###");
+            OutputStats["InputOxygenFactor"] = gridOxygenFactor.ToString("0.###");
             OutputStats["UpdateGuid"] = _evaluated.ToString();
 
             OutputFontColor = Color.Lerp(Color0, Color1, efficiency);
