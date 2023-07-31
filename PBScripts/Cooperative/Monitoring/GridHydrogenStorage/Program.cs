@@ -50,6 +50,7 @@ namespace PBScripts.Cooperative.Monitoring.GridHydrogenStorage
         private IEnumerator<object> MonitorOxygenStorage()
         {
             DateTime startTime = DateTime.UtcNow;
+            Runtime.UpdateFrequency = UpdateFrequency.Update10;
             ushort evaluated = 0;
             int count = 0, stockpiling = 0;
             double stored = 0f, capacity = 0f;
@@ -97,11 +98,12 @@ namespace PBScripts.Cooperative.Monitoring.GridHydrogenStorage
             OutputFontColor = Color.Lerp(_color0, _color1, filledFactor);
             yield return true;
 
-            // Fart it out
+            // Output
             DoManualOutput();
             yield return true;
 
             // On early finish, wait for interval
+            Runtime.UpdateFrequency = UpdateFrequency.Update100;
             DateTime waitTill = startTime + TimeSpan.FromSeconds(_random.Next(
                 (int)INTERVAL_MINIMUM.TotalSeconds,
                 (int)INTERVAL_MAXIMUM.TotalSeconds));

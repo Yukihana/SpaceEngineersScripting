@@ -2,126 +2,147 @@
 using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using VRage.Game.GUI.TextPanel;
+using VRageMath;
 
 namespace PBScripts.Independent.AutoFormatDisplays
 {
     internal class Program : SEProgramBase
     {
+        private const string SCRIPT_ID = "AutoFormatDisplays";
+
         public Program()
-        { Runtime.UpdateFrequency = UpdateFrequency.Update100; }
+        {
+            OutputTitle = $"Independent-{SCRIPT_ID}";
+            TagSelf("IndependentScript", SCRIPT_ID);
+            Runtime.UpdateFrequency = UpdateFrequency.Update100;
+        }
 
         public void Main()
         { CycleCoroutine(ref _enumerator, () => FormatDisplays()); }
 
-        private IEnumerator<bool> _enumerator = null;
-        private readonly TimeSpan INTERVAL_FIXED_MINIMUM = TimeSpan.FromMinutes(5);
-        private const int BATCH_SIZE = 1;
+        private IEnumerator<object> _enumerator = null;
 
-        // Coroutine
+        // TagSelf
 
-        private const string IGNORE_MARKER = "AutoFormatIgnore";
-        private readonly Dictionary<IMyTextPanel, string> _panelCustomDataCache = new Dictionary<IMyTextPanel, string>();
+        // CycleCoroutine
 
-        private IEnumerator<bool> FormatDisplays()
+        // Validate
+
+        // GetParameter
+
+        // ParseParameters
+
+        // ScriptOutput
+
+        // Required
+
+        private readonly Random _random = new Random();
+        private readonly TimeSpan INTERVAL_MINIMUM = TimeSpan.FromMinutes(5);
+        private readonly TimeSpan INTERVAL_MAXIMUM = TimeSpan.FromMinutes(10);
+
+        private readonly string IGNORE_MARKER = $"[{SCRIPT_ID}Ignore]";
+        private const int BATCH_SIZE = 4;
+        private const string ParameterGroupIdentifier = "AutoFormatParameters";
+
+        private readonly List<IMyTextPanel> _panels = new List<IMyTextPanel>();
+        private readonly Dictionary<IMyTextPanel, string> _customDatas = new Dictionary<IMyTextPanel, string>();
+        private readonly Dictionary<string, string> _panelParameters = new Dictionary<string, string>();
+        private ulong _evaluated = 0, _errors = 0, _updatesTotal = 0;
+
+        // Routine
+
+        private IEnumerator<object> FormatDisplays()
         {
-            // Prepare
             DateTime startTime = DateTime.UtcNow;
-            ulong evaluated = 0;
-            uint count = 0, updated = 0;
-
-            string lastData;
-            var carryOver = new List<IMyTextPanel>();
+            Runtime.UpdateFrequency = UpdateFrequency.Update10;
+            uint count = 0, recent = 0, updates = 0;
+            _panels.Clear();
 
             // Enumerate panels
-            var panels = new List<IMyTextPanel>();
-            GridTerminalSystem.GetBlocksOfType(panels);
+            GridTerminalSystem.GetBlocksOfType(_panels);
             yield return true;
 
-            foreach (var panel in panels)
+            foreach (var panel in _panels)
             {
-                // Yield by batch
-                if (++evaluated % BATCH_SIZE == 0)
+                unchecked { _evaluated++; }
+                if (_evaluated % BATCH_SIZE == 0)
                     yield return true;
 
-                // Validate
-                if (!panel.IsSameConstructAs(Me) ||
-                    !panel.IsFunctional || !panel.Enabled ||
-                    panel.CustomData.Contains($"[{IGNORE_MARKER}]") ||
-                    string.IsNullOrWhiteSpace(panel.CustomData))
+                // Skip customdata validation here since it's required anyway in the step after.
+                if (!ValidateBlockOnSameConstruct(panel))
                     continue;
 
-                // Preprocess
+                // Do all custom data related validations here onwards
+                string customData = panel.CustomData;
+                if (string.IsNullOrWhiteSpace(customData) ||
+                    customData.Contains(IGNORE_MARKER))
+                    continue;
+
                 count++;
-                carryOver.Add(panel);
-                if (_panelCustomDataCache.TryGetValue(panel, out lastData) &&
-                    panel.CustomData.Equals(lastData))
+                string lastCustomData;
+                if (_customDatas.TryGetValue(panel, out lastCustomData) &&
+                    lastCustomData.Equals(customData))
                     continue;
-                else
-                    _panelCustomDataCache[panel] = panel.CustomData;
 
-                // Parse and apply
-                var properties = ParseProperties(panel.CustomData);
-                yield return true;
-                if (ApplyProperties(panel, properties))
-                    updated++;
+                _customDatas[panel] = customData;
+                _panelParameters.Clear();
+                if (TryGetBlockParameter(panel, ParameterGroupIdentifier, out customData) &&
+                    ParsePackedParameters(customData, _panelParameters, true) > 0)
+                {
+                    updates += ApplyProperties(panel, _panelParameters);
+                    recent++;
+                }
             }
             yield return true;
 
-            // Cleanup
-            var toClear = _panelCustomDataCache.Keys.Except(carryOver).ToList();
-            foreach (var key in toClear)
-                _panelCustomDataCache.Remove(key);
+            // Calculate
+            _updatesTotal += updates;
+            OutputStats["DisplaysTotal"] = count.ToString();
+            OutputStats["DisplaysRecent"] = recent.ToString();
+            OutputStats["UpdatesRecent"] = updates.ToString();
+            OutputStats["UpdatesTotal"] = _updatesTotal.ToString();
+            OutputStats["Errors"] = _errors.ToString();
             yield return true;
 
-            // Prepare stats
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine($"[Independent:AutoFormatDisplays]");
-            sb.AppendLine();
-            sb.AppendLine($"[AutoFormatDisplaysCount:{count}]");
-            sb.AppendLine($"[AutoFormatDisplaysUpdated:{updated}]");
-            string output = sb.ToString();
-            yield return true;
-
-            // Post stats
-            IMyTextSurface monitor = Me.GetSurface(0);
-            monitor.ContentType = ContentType.TEXT_AND_IMAGE;
-            monitor.FontColor = new VRageMath.Color(1f, 0f, 0.8f);
-            monitor.WriteText(output);
-            Me.CustomData = output;
+            // Output
+            DoManualOutput();
             yield return true;
 
             // On early finish, wait for interval
-            while (DateTime.UtcNow - startTime < INTERVAL_FIXED_MINIMUM)
+            Runtime.UpdateFrequency = UpdateFrequency.Update100;
+            DateTime waitTill = startTime + TimeSpan.FromSeconds(_random.Next(
+                (int)INTERVAL_MINIMUM.TotalSeconds,
+                (int)INTERVAL_MAXIMUM.TotalSeconds));
+            while (DateTime.UtcNow < waitTill)
                 yield return true;
         }
 
-        private bool ApplyProperties(IMyTextPanel panel, Dictionary<string, string> properties)
+        private uint ApplyProperties(IMyTextPanel panel, Dictionary<string, string> properties)
         {
-            int updated = 0;
+            uint updates = 0;
             try
             {
+                // Strings
                 string stringValue;
-                if (properties.TryGetValue("ThisTextPanelMode", out stringValue) &&
+                if (properties.TryGetValue("mode", out stringValue) &&
                     stringValue.ToUpperInvariant().Equals("TEXT_AND_IMAGE"))
-                { panel.ContentType = ContentType.TEXT_AND_IMAGE; updated++; }
-                if (properties.TryGetValue("ThisTextPanelFont", out stringValue))
-                { panel.Font = stringValue; updated++; }
-                if (properties.TryGetValue("ThisTextPanelFontColor", out stringValue))
-                { panel.FontColor = ToColor(stringValue); updated++; }
-                if (properties.TryGetValue("ThisTextPanelBackgroundColor", out stringValue))
-                { panel.BackgroundColor = ToColor(stringValue); updated++; }
-
+                { panel.ContentType = ContentType.TEXT_AND_IMAGE; updates++; }
+                if (properties.TryGetValue("font", out stringValue))
+                { panel.Font = stringValue; updates++; }
+                // Colors
+                if (properties.TryGetValue("fontcolor", out stringValue))
+                { panel.FontColor = ColorExtensions.HexToColor(stringValue); updates++; }
+                if (properties.TryGetValue("backcolor", out stringValue))
+                { panel.BackgroundColor = ColorExtensions.HexToColor(stringValue); updates++; }
+                // Floats
                 float floatValue;
-                if (properties.TryGetValue("ThisTextPanelBackgroundColor", out stringValue) &&
+                if (properties.TryGetValue("fontsize", out stringValue) &&
                     float.TryParse(stringValue, out floatValue))
-                { panel.FontSize = floatValue; updated++; }
-
-                return updated > 0;
+                { panel.FontSize = floatValue; updates++; }
             }
-            catch { return false; }
+            catch { unchecked { _errors++; } }
+            return updates;
         }
     }
 }
