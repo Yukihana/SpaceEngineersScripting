@@ -41,6 +41,7 @@ namespace PBScripts.Cooperative.Monitoring.GridPowerStorage
         private readonly Color Color0 = new Color(1f, 0.5f, 0.25f);
         private readonly Color Color1 = new Color(0.25f, 0.5f, 1f);
 
+        private ulong _evaluated = 0;
         private readonly List<IMyBatteryBlock> _raw = new List<IMyBatteryBlock>();
         private readonly List<IMyBatteryBlock> _batteries = new List<IMyBatteryBlock>();
 
@@ -49,7 +50,6 @@ namespace PBScripts.Cooperative.Monitoring.GridPowerStorage
         private IEnumerator<object> MonitorPowerStorage()
         {
             DateTime startTime = DateTime.UtcNow;
-            ushort evaluated = 0;
             int count = 0, charging = 0;
             float stored = 0f, capacity = 0f;
             yield return null;
@@ -63,8 +63,8 @@ namespace PBScripts.Cooperative.Monitoring.GridPowerStorage
             _batteries.Clear();
             foreach (IMyBatteryBlock battery in _raw)
             {
-                unchecked { evaluated++; }
-                if (evaluated % BATCHSIZE == 0)
+                unchecked { _evaluated++; }
+                if (_evaluated % BATCHSIZE == 0)
                     yield return true;
 
                 if (!ValidateBlockOnSameConstruct(battery) ||
@@ -94,7 +94,7 @@ namespace PBScripts.Cooperative.Monitoring.GridPowerStorage
             OutputStats["BatteriesCharging"] = charging.ToString();
             yield return true;
 
-            // Fart it out
+            // Output
             OutputFontColor = Color.Lerp(Color0, Color1, filledFactor);
             DoManualOutput();
             yield return true;

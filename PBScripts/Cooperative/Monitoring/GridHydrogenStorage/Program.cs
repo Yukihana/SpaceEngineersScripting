@@ -69,7 +69,7 @@ namespace PBScripts.Cooperative.Monitoring.GridHydrogenStorage
                     yield return true;
 
                 if (!ValidateBlockOnSameConstruct(tank, IGNORE_MARKER) ||
-                    !tank.BlockDefinition.SubtypeName.Contains("Hydrogen"))
+                    !tank.BlockDefinition.SubtypeId.Contains("Hydrogen"))
                     continue;
 
                 if (tank.Stockpile)

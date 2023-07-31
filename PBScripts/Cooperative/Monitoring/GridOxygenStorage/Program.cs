@@ -68,7 +68,8 @@ namespace PBScripts.Cooperative.Monitoring.GridOxygenStorage
                     yield return true;
 
                 if (!ValidateBlockOnSameConstruct(tank, IGNORE_MARKER) ||
-                    tank.BlockDefinition.SubtypeName.Contains("Hydrogen"))
+                    !(string.IsNullOrWhiteSpace(tank.BlockDefinition.SubtypeId) ||
+                    tank.BlockDefinition.SubtypeId.Contains("Oxygen")))
                     continue;
 
                 if (tank.Stockpile)
@@ -79,7 +80,7 @@ namespace PBScripts.Cooperative.Monitoring.GridOxygenStorage
             yield return true;
 
             // Calculate
-            foreach (var tank in _raw)
+            foreach (var tank in _tanks)
             {
                 count++;
                 capacity += tank.Capacity;

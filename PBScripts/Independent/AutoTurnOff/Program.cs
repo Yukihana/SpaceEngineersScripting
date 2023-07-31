@@ -2,82 +2,104 @@
 using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using VRage.Game.GUI.TextPanel;
+using VRageMath;
 
 namespace PBScripts.Independent.AutoTurnOff
 {
     internal class Program : SEProgramBase
     {
+        private const string SCRIPT_ID = "AutoTurnOff";
+
         public Program()
         {
+            OutputTitle = "AutoTurnOff";
+            OutputFontColor = new Color(1f, 0.5f, 0.5f);
+            TagSelf("IndependentScript", SCRIPT_ID);
             Runtime.UpdateFrequency = UpdateFrequency.Update100;
-            _interval = TimeSpan.FromMinutes(1);
         }
 
         public void Main()
+        { CycleCoroutine(ref _enumerator, () => AutoTurnOffBlocks()); }
+
+        private IEnumerator<object> _enumerator = null;
+
+        // TagSelf
+
+        // CycleCoroutine
+
+        // ScriptOutput
+
+        // Validate
+
+        // TypeConfig
+
+        private bool IsTargetType(IMyTerminalBlock block)
         {
-            CycleCoroutine(ref _pollingTask, () => AutoTurnOffBlocks());
+            if (block is IMyThrust &&
+                block.BlockDefinition.SubtypeId.Contains("AtmosphericThruster"))
+                return true;
+
+            // System.Type.IsAssignableFrom is prohibited
+            return false;
         }
 
-        private IEnumerator<bool> _pollingTask = null;
-        private readonly TimeSpan _interval;
-        private const int BATCHSIZE = 20;
+        // Required
 
-        // Coroutine
+        private readonly Random _random = new Random();
+        private readonly TimeSpan INTERVAL_MINIMUM = TimeSpan.FromMinutes(2);
+        private readonly TimeSpan INTERVAL_MAXIMUM = TimeSpan.FromMinutes(5);
 
-        private IEnumerator<bool> AutoTurnOffBlocks()
+        private uint _evaluated = 0;
+        private const int BATCHSIZE = 32;
+
+        private ulong _total = 0;
+
+        // Routine
+
+        private IEnumerator<object> AutoTurnOffBlocks()
         {
-            // Prepare
             DateTime startTime = DateTime.UtcNow;
-            long evaluated = 0;
+            Runtime.UpdateFrequency = UpdateFrequency.Update10;
+            uint count = 0;
 
-            // Enumerate relevant blocks
-            var thrusters = new List<IMyThrust>();
-            GridTerminalSystem.GetBlocksOfType(thrusters);
+            // Get all blocks
+            var blocks = new List<IMyFunctionalBlock>();
+            GridTerminalSystem.GetBlocksOfType(blocks);
             yield return true;
 
             // Validate and shut them down
-            foreach (var thruster in thrusters)
+            foreach (var block in blocks)
             {
-                evaluated++;
-
-                // Validate
-                if (thruster.CubeGrid != Me.CubeGrid)
-                    continue;
-                if (!thruster.IsFunctional)
-                    continue;
-                if (!thruster.Enabled)
-                    continue;
-                if (!thruster.BlockDefinition.SubtypeId.Contains("AtmosphericThruster"))
-                    continue;
-
-                // Shutdown
-                thruster.Enabled = false;
-
-                // Yield by batch
-                if (evaluated % BATCHSIZE == 0)
+                unchecked { _evaluated++; }
+                if (_evaluated % BATCHSIZE == 0)
                     yield return true;
+
+                if (!ValidateBlockOnSameConstruct(block))
+                    continue;
+
+                if (!IsTargetType(block))
+                    continue;
+
+                block.Enabled = false;
+                count++;
             }
             yield return true;
 
-            // Prepare stats
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine("[Independent:AutoTurnOff]");
-            sb.AppendLine();
-            sb.AppendLine("[AutoTurnOffType:AtmosphericThruster]");
-            string output = sb.ToString();
-
-            // Post stats
-            IMyTextSurface monitor = Me.GetSurface(0);
-            monitor.ContentType = ContentType.TEXT_AND_IMAGE;
-            monitor.FontColor = new VRageMath.Color(1f, 0.5f, 0.5f);
-            monitor.WriteText(output);
-            Me.CustomData = output;
+            // Calculate
+            unchecked { _total += count; }
+            OutputStats["BlocksDisabledThisCycle"] = count.ToString();
+            OutputStats["BlocksDisabledTotal"] = _total.ToString();
+            OutputStats["CycleGuid"] = _evaluated.ToString();
+            DoManualOutput();
+            yield return null;
 
             // On early finish, wait for interval
-            while (DateTime.UtcNow - startTime < _interval)
-                yield return true;
+            Runtime.UpdateFrequency = UpdateFrequency.Update100;
+            DateTime waitTill = startTime + TimeSpan.FromSeconds(_random.Next(
+                (int)INTERVAL_MINIMUM.TotalSeconds,
+                (int)INTERVAL_MAXIMUM.TotalSeconds));
+            while (DateTime.UtcNow < waitTill)
+                yield return null;
         }
     }
 }
