@@ -7,7 +7,7 @@ namespace PBScripts.AddonModules
     {
         public readonly List<string> statistics = new List<string>();
 
-        public IEnumerator<bool> PollStatistics()
+        public IEnumerator<object> PollStatistics()
         {
             statistics.Clear();
             int evaluated = 0;
@@ -17,7 +17,7 @@ namespace PBScripts.AddonModules
             var programs = new List<IMyProgrammableBlock>();
             GridTerminalSystem.GetBlocksOfType(programs);
             programs.Remove(Me);
-            yield return true;
+            yield return null;
 
             // Copy custom data
             foreach (var program in programs)
@@ -37,7 +37,7 @@ namespace PBScripts.AddonModules
 
                 //  Yield by batch
                 if (evaluated % batchsize == 0)
-                    yield return true;
+                    yield return null;
             }
         }
 

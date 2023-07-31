@@ -21,7 +21,7 @@ namespace PBScripts.Independent.AutoCloseDoors
         public void Main()
         { CycleCoroutine(ref _enumerator, () => CloseDoors()); }
 
-        private IEnumerator<bool> _enumerator = null;
+        private IEnumerator<object> _enumerator = null;
         private readonly TimeSpan INTERVAL_MINIMUM = TimeSpan.FromSeconds(10);
         private const int BATCH_SIZE = 16;
 
@@ -31,7 +31,7 @@ namespace PBScripts.Independent.AutoCloseDoors
         private readonly TimeSpan DOOR_DELAY = TimeSpan.FromSeconds(20);
         private const string IGNORE_MARKER = "AutoCloseIgnore";
 
-        private IEnumerator<bool> CloseDoors()
+        private IEnumerator<object> CloseDoors()
         {
             // Prepare
             DateTime startTime = DateTime.UtcNow;
@@ -41,7 +41,7 @@ namespace PBScripts.Independent.AutoCloseDoors
             // Enumerate
             var doors = new List<IMyDoor>();
             GridTerminalSystem.GetBlocksOfType(doors);
-            yield return true;
+            yield return null;
 
             var carryOver = new List<IMyDoor>();
             foreach (var door in doors)
@@ -92,14 +92,14 @@ namespace PBScripts.Independent.AutoCloseDoors
 
                 // Yield by batch
                 if (evaluated % BATCH_SIZE == 0)
-                    yield return true;
+                    yield return null;
             }
 
             // Clean pending list
             var toClear = _pendingDoors.Keys.Except(carryOver).ToList();
             foreach (var key in toClear)
                 _pendingDoors.Remove(key);
-            yield return true;
+            yield return null;
 
             // Prepare stats
             StringBuilder sb = new StringBuilder();
@@ -109,7 +109,7 @@ namespace PBScripts.Independent.AutoCloseDoors
             sb.AppendLine($"[GridPedestrianDoorsPending:{_pendingDoors.Count}]");
             sb.AppendLine($"[GridPedestrianDoorsClosing:{closedCount}]");
             string output = sb.ToString();
-            yield return true;
+            yield return null;
 
             // Post stats
             IMyTextSurface monitor = Me.GetSurface(0);
@@ -117,11 +117,11 @@ namespace PBScripts.Independent.AutoCloseDoors
             monitor.FontColor = new VRageMath.Color(1f, 0f, 0.8f);
             monitor.WriteText(output);
             Me.CustomData = output;
-            yield return true;
+            yield return null;
 
             // On early finish, wait for interval (No append randomization for doors)
             while (DateTime.UtcNow - startTime < INTERVAL_MINIMUM)
-                yield return true;
+                yield return null;
         }
     }
 }

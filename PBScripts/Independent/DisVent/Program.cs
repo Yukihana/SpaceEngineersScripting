@@ -22,7 +22,7 @@ namespace PBScripts.Independent.DisVent
             CycleCoroutine(ref _pollingTask, () => DisableVents());
         }
 
-        private IEnumerator<bool> _pollingTask = null;
+        private IEnumerator<object> _pollingTask = null;
         private const int BATCHSIZE = 20;
         private readonly TimeSpan FIXEDMINIMUMINTERVAL;
         private readonly Random _random = new Random();
@@ -33,7 +33,7 @@ namespace PBScripts.Independent.DisVent
         private const string IGNOREMARKER = "DisVentIgnore";
         private List<IMyAirVent> _marked = new List<IMyAirVent>();
 
-        private IEnumerator<bool> DisableVents()
+        private IEnumerator<object> DisableVents()
         {
             // Prepare
             DateTime startTime = DateTime.UtcNow;
@@ -42,7 +42,7 @@ namespace PBScripts.Independent.DisVent
             // Enumerate relevant blocks
             var vents = new List<IMyAirVent>();
             GridTerminalSystem.GetBlocksOfType(vents);
-            yield return true;
+            yield return null;
 
             // Validate and shut them down
             foreach (var vent in vents)
@@ -74,9 +74,9 @@ namespace PBScripts.Independent.DisVent
 
                 // Yield by batch
                 if (evaluated % BATCHSIZE == 0)
-                    yield return true;
+                    yield return null;
             }
-            yield return true;
+            yield return null;
 
             // Clean up
             _marked = _marked.Where(x => x.IsFunctional && x.Depressurize).ToList();
@@ -98,13 +98,13 @@ namespace PBScripts.Independent.DisVent
 
             // On early finish, wait for interval
             while (DateTime.UtcNow - startTime < FIXEDMINIMUMINTERVAL)
-                yield return true;
+                yield return null;
 
             // Followed that by an additional random interval
             startTime = DateTime.UtcNow;
             TimeSpan randomInterval = TimeSpan.FromSeconds(_random.Next(0, RANDOMINTERVALMAX));
             while (DateTime.UtcNow - startTime < randomInterval)
-                yield return true;
+                yield return null;
         }
     }
 }

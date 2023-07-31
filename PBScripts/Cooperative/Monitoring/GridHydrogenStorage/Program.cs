@@ -54,12 +54,12 @@ namespace PBScripts.Cooperative.Monitoring.GridHydrogenStorage
             ushort evaluated = 0;
             int count = 0, stockpiling = 0;
             double stored = 0f, capacity = 0f;
-            yield return true;
+            yield return null;
 
             // Get tanks
             _raw.Clear();
             GridTerminalSystem.GetBlocksOfType(_raw);
-            yield return true;
+            yield return null;
 
             // Enumerate to validate
             _tanks.Clear();
@@ -67,7 +67,7 @@ namespace PBScripts.Cooperative.Monitoring.GridHydrogenStorage
             {
                 unchecked { evaluated++; }
                 if (evaluated % BATCH_SIZE == 0)
-                    yield return true;
+                    yield return null;
 
                 if (!ValidateBlockOnSameConstruct(tank, IGNORE_MARKER) ||
                     !tank.BlockDefinition.SubtypeId.Contains("Hydrogen"))
@@ -78,7 +78,7 @@ namespace PBScripts.Cooperative.Monitoring.GridHydrogenStorage
                 else
                     _tanks.Add(tank);
             }
-            yield return true;
+            yield return null;
 
             // Calculate
             foreach (var tank in _raw)
@@ -96,11 +96,11 @@ namespace PBScripts.Cooperative.Monitoring.GridHydrogenStorage
             OutputStats["TanksStockpiling"] = stockpiling.ToString();
 
             OutputFontColor = Color.Lerp(_color0, _color1, filledFactor);
-            yield return true;
+            yield return null;
 
             // Output
             DoManualOutput();
-            yield return true;
+            yield return null;
 
             // On early finish, wait for interval
             Runtime.UpdateFrequency = UpdateFrequency.Update100;
@@ -108,7 +108,7 @@ namespace PBScripts.Cooperative.Monitoring.GridHydrogenStorage
                 (int)INTERVAL_MINIMUM.TotalSeconds,
                 (int)INTERVAL_MAXIMUM.TotalSeconds));
             while (DateTime.UtcNow < waitTill)
-                yield return true;
+                yield return null;
         }
     }
 }

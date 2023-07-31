@@ -15,7 +15,7 @@ namespace PBScripts.DataPolling.PollIntegrity
         public void Main()
         { CycleCoroutine(ref _enumerator, () => PollIntegrity()); }
 
-        private IEnumerator<bool> _enumerator = null;
+        private IEnumerator<object> _enumerator = null;
         private readonly TimeSpan INTERVAL_FIXED_MINIMUM = TimeSpan.FromMinutes(1);
         private const int BATCH_SIZE = 20;
         private readonly Random _random = new Random();
@@ -23,7 +23,7 @@ namespace PBScripts.DataPolling.PollIntegrity
 
         // Coroutine
 
-        private IEnumerator<bool> PollIntegrity()
+        private IEnumerator<object> PollIntegrity()
         {
             // Prepare
             DateTime startTime = DateTime.UtcNow;
@@ -60,7 +60,7 @@ namespace PBScripts.DataPolling.PollIntegrity
 
                 // Yield by batch
                 if (evaluated % BATCH_SIZE == 0)
-                    yield return true;
+                    yield return null;
             }
 
             // Calculate
@@ -75,7 +75,7 @@ namespace PBScripts.DataPolling.PollIntegrity
             sb.AppendLine($"[GridOxygenFactor:{oxygenPercent}]");
             sb.AppendLine($"[GridOxygenTankCount:{count}]");
             string output = sb.ToString();
-            yield return true;
+            yield return null;
 
             // Post stats
             IMyTextSurface monitor = Me.GetSurface(0);
@@ -84,17 +84,17 @@ namespace PBScripts.DataPolling.PollIntegrity
             monitor.FontColor = new VRageMath.Color(0f, 1f, 0.5f);
             monitor.WriteText(output);
             Me.CustomData = output;
-            yield return true;
+            yield return null;
 
             // On early finish, wait for interval
             while (DateTime.UtcNow - startTime < INTERVAL_FIXED_MINIMUM)
-                yield return true;
+                yield return null;
 
             // Followed that by an additional random interval
             startTime = DateTime.UtcNow;
             TimeSpan randomInterval = TimeSpan.FromSeconds(_random.Next(0, INTERVAL_APPENDED_MAXIMUM));
             while (DateTime.UtcNow - startTime < randomInterval)
-                yield return true;
+                yield return null;
         }
     }
 }

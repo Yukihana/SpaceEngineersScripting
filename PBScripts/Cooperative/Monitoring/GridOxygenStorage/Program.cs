@@ -43,29 +43,29 @@ namespace PBScripts.Cooperative.Monitoring.GridOxygenStorage
 
         private readonly List<IMyGasTank> _raw = new List<IMyGasTank>();
         private readonly List<IMyGasTank> _tanks = new List<IMyGasTank>();
+        private ulong _evaluated = 0;
 
         // Routine
 
         private IEnumerator<object> MonitorOxygenStorage()
         {
             DateTime startTime = DateTime.UtcNow;
-            ushort evaluated = 0;
             int count = 0, stockpiling = 0;
             double stored = 0f, capacity = 0f;
-            yield return true;
+            yield return null;
 
             // Get tanks
             _raw.Clear();
             GridTerminalSystem.GetBlocksOfType(_raw);
-            yield return true;
+            yield return null;
 
             // Enumerate to validate
             _tanks.Clear();
             foreach (var tank in _raw)
             {
-                unchecked { evaluated++; }
-                if (evaluated % BATCH_SIZE == 0)
-                    yield return true;
+                unchecked { _evaluated++; }
+                if (_evaluated % BATCH_SIZE == 0)
+                    yield return null;
 
                 if (!ValidateBlockOnSameConstruct(tank, IGNORE_MARKER) ||
                     !(string.IsNullOrWhiteSpace(tank.BlockDefinition.SubtypeId) ||
@@ -77,7 +77,7 @@ namespace PBScripts.Cooperative.Monitoring.GridOxygenStorage
                 else
                     _tanks.Add(tank);
             }
-            yield return true;
+            yield return null;
 
             // Calculate
             foreach (var tank in _tanks)
@@ -93,20 +93,21 @@ namespace PBScripts.Cooperative.Monitoring.GridOxygenStorage
             OutputStats["OxygenCapacity"] = capacity.ToString();
             OutputStats["TanksAvailable"] = count.ToString();
             OutputStats["TanksStockpiling"] = stockpiling.ToString();
+            OutputStats["UpdateGuid"] = _evaluated.ToString();
 
             OutputFontColor = Color.Lerp(_color0, _color1, filledFactor);
-            yield return true;
+            yield return null;
 
-            // Fart it out
+            // Output
             DoManualOutput();
-            yield return true;
+            yield return null;
 
             // On early finish, wait for interval
             DateTime waitTill = startTime + TimeSpan.FromSeconds(_random.Next(
                 (int)INTERVAL_MINIMUM.TotalSeconds,
                 (int)INTERVAL_MAXIMUM.TotalSeconds));
             while (DateTime.UtcNow < waitTill)
-                yield return true;
+                yield return null;
         }
     }
 }

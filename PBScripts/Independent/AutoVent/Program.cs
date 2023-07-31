@@ -185,7 +185,7 @@ namespace PBScripts.Independent.AutoVent
 
             // Output
             DoManualOutput();
-            yield return true;
+            yield return null;
 
             // On early finish, wait for interval
             Runtime.UpdateFrequency = UpdateFrequency.Update100;

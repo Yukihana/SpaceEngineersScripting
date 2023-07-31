@@ -65,7 +65,7 @@ namespace PBScripts.Cooperative.Monitoring.GridPowerStorage
             {
                 unchecked { _evaluated++; }
                 if (_evaluated % BATCHSIZE == 0)
-                    yield return true;
+                    yield return null;
 
                 if (!ValidateBlockOnSameConstruct(battery) ||
                     battery.CustomData.Contains(IGNORE_MARKER))
@@ -76,7 +76,7 @@ namespace PBScripts.Cooperative.Monitoring.GridPowerStorage
                 else
                     _batteries.Add(battery);
             }
-            yield return true;
+            yield return null;
 
             // Calculate
             foreach (var battery in _batteries)
@@ -92,19 +92,19 @@ namespace PBScripts.Cooperative.Monitoring.GridPowerStorage
             OutputStats["PowerCapacity"] = $"{capacity} MWh";
             OutputStats["BatteriesAvailable"] = count.ToString();
             OutputStats["BatteriesCharging"] = charging.ToString();
-            yield return true;
+            yield return null;
 
             // Output
             OutputFontColor = Color.Lerp(Color0, Color1, filledFactor);
             DoManualOutput();
-            yield return true;
+            yield return null;
 
             // On early finish, wait for interval
             DateTime waitTill = startTime + TimeSpan.FromSeconds(_random.Next(
                 (int)INTERVAL_MINIMUM.TotalSeconds,
                 (int)INTERVAL_MAXIMUM.TotalSeconds));
             while (DateTime.UtcNow < waitTill)
-                yield return true;
+                yield return null;
         }
     }
 }

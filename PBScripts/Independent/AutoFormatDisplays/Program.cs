@@ -61,13 +61,13 @@ namespace PBScripts.Independent.AutoFormatDisplays
 
             // Enumerate panels
             GridTerminalSystem.GetBlocksOfType(_panels);
-            yield return true;
+            yield return null;
 
             foreach (var panel in _panels)
             {
                 unchecked { _evaluated++; }
                 if (_evaluated % BATCH_SIZE == 0)
-                    yield return true;
+                    yield return null;
 
                 // Skip customdata validation here since it's required anyway in the step after.
                 if (!ValidateBlockOnSameConstruct(panel))
@@ -94,7 +94,7 @@ namespace PBScripts.Independent.AutoFormatDisplays
                     recent++;
                 }
             }
-            yield return true;
+            yield return null;
 
             // Calculate
             _updatesTotal += updates;
@@ -103,11 +103,11 @@ namespace PBScripts.Independent.AutoFormatDisplays
             OutputStats["UpdatesRecent"] = updates.ToString();
             OutputStats["UpdatesTotal"] = _updatesTotal.ToString();
             OutputStats["Errors"] = _errors.ToString();
-            yield return true;
+            yield return null;
 
             // Output
             DoManualOutput();
-            yield return true;
+            yield return null;
 
             // On early finish, wait for interval
             Runtime.UpdateFrequency = UpdateFrequency.Update100;
@@ -115,7 +115,7 @@ namespace PBScripts.Independent.AutoFormatDisplays
                 (int)INTERVAL_MINIMUM.TotalSeconds,
                 (int)INTERVAL_MAXIMUM.TotalSeconds));
             while (DateTime.UtcNow < waitTill)
-                yield return true;
+                yield return null;
         }
 
         private uint ApplyProperties(IMyTextPanel panel, Dictionary<string, string> properties)

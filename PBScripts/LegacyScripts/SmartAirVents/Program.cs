@@ -43,10 +43,10 @@ namespace PBScripts.LegacyScripts.SmartAirVents
 
         // Polling
 
-        private IEnumerator<bool> _pollTask = null;
+        private IEnumerator<object> _pollTask = null;
         private List<IMyAirVent> _pollList = new List<IMyAirVent>();
 
-        private IEnumerator<bool> PollVents()
+        private IEnumerator<object> PollVents()
         {
             foreach (var vent in _vents.ToArray())
             {
@@ -54,14 +54,14 @@ namespace PBScripts.LegacyScripts.SmartAirVents
                     _vents.Remove(vent);
             }
 
-            yield return true;
+            yield return null;
 
             _pollTicksCurrent = 0;
             GridTerminalSystem.GetBlocksOfType(_pollList);
 
             while (_pollList.Any())
             {
-                yield return true;
+                yield return null;
                 var vent = _pollList[0];
                 _pollList.Remove(vent);
                 _pollTicksCurrent++;
@@ -74,22 +74,22 @@ namespace PBScripts.LegacyScripts.SmartAirVents
 
             while (_pollTicksCurrent < _pollTicksPerCycle)
             {
-                yield return true;
+                yield return null;
                 _pollTicksCurrent++;
             }
         }
 
         // Start Vent (Run enumerated, one vent or one group at a time)
 
-        private IEnumerator<bool> _activateTask = null;
+        private IEnumerator<object> _activateTask = null;
         private List<AirVentInfo> _activateList = new List<AirVentInfo>();
 
-        private IEnumerator<bool> ActivateVents()
+        private IEnumerator<object> ActivateVents()
         {
             _activateList = _vents.ToList();
             while (_activateList.Any())
             {
-                yield return true;
+                yield return null;
 
                 var vent = _activateList[0];
                 _activateList.Remove(vent);

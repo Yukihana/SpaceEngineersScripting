@@ -31,9 +31,9 @@ namespace PBScripts.LegacyScripts.SmartJumpDriveCharging
 
         // Routine
 
-        private IEnumerator<bool> _jumpDriveChargeControl = null;
+        private IEnumerator<object> _jumpDriveChargeControl = null;
 
-        private IEnumerator<bool> PollAutoBatteries()
+        private IEnumerator<object> PollAutoBatteries()
         {
             // Delay
             while (_delayCounter < _delayMultiplier)
@@ -43,7 +43,7 @@ namespace PBScripts.LegacyScripts.SmartJumpDriveCharging
             // Get all batteries
             var batteriesRaw = new List<IMyBatteryBlock>();
             GridTerminalSystem.GetBlocksOfType(batteriesRaw);
-            yield return true;
+            yield return null;
 
             // Pick relevant blocks
             var batteries = batteriesRaw.Where(x
@@ -51,7 +51,7 @@ namespace PBScripts.LegacyScripts.SmartJumpDriveCharging
                 x.IsFunctional && x.Enabled &&
                 x.ChargeMode == ChargeMode.Auto)
                 .ToHashSet();
-            yield return true;
+            yield return null;
 
             // Assess batteries
             double totalCharge = 0;
@@ -66,12 +66,12 @@ namespace PBScripts.LegacyScripts.SmartJumpDriveCharging
             // Bail if inside no-change zone
             if (storedRatio > _stopChargingBelow && storedRatio < _startChargingAbove)
                 yield break;
-            yield return true;
+            yield return null;
 
             // Get jumpdrives
             var jumpDrivesRaw = new List<IMyJumpDrive>();
             GridTerminalSystem.GetBlocksOfType(jumpDrivesRaw);
-            yield return true;
+            yield return null;
 
             // Pick relevant blocks
             var jumpDrives = jumpDrivesRaw.Where(x
@@ -80,7 +80,7 @@ namespace PBScripts.LegacyScripts.SmartJumpDriveCharging
                 x.IsFunctional && x.Enabled &&
                 x.CurrentStoredPower != x.MaxStoredPower)
                 .ToHashSet();
-            yield return true;
+            yield return null;
 
             // Apply changes
             bool enable = storedRatio > _startChargingAbove;

@@ -97,7 +97,7 @@ namespace PBScripts.Independent.AutoBasicIngot
                 (int)INTERVAL_MINIMUM.TotalSeconds,
                 (int)INTERVAL_MAXIMUM.TotalSeconds));
             while (DateTime.UtcNow < waitTill)
-                yield return true;
+                yield return null;
         }
     }
 }

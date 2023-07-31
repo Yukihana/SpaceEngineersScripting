@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 
 namespace PBScripts.AddonModules
 {
@@ -39,18 +38,6 @@ namespace PBScripts.AddonModules
                 return true;
             enumerator.Dispose();
             return false;
-        }
-
-        [Obsolete]
-        public void CycleCoroutine(ref IEnumerator<bool> enumerator, Func<IEnumerator<bool>> enumeratorFactory, bool reset = false)
-        {
-            if (enumerator == null)
-                enumerator = enumeratorFactory();
-            else if (!enumerator.MoveNext() || reset)
-            {
-                enumerator.Dispose();
-                enumerator = null;
-            }
         }
     }
 }

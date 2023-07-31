@@ -65,14 +65,14 @@ namespace PBScripts.Independent.AutoTurnOff
             // Get all blocks
             var blocks = new List<IMyFunctionalBlock>();
             GridTerminalSystem.GetBlocksOfType(blocks);
-            yield return true;
+            yield return null;
 
             // Validate and shut them down
             foreach (var block in blocks)
             {
                 unchecked { _evaluated++; }
                 if (_evaluated % BATCHSIZE == 0)
-                    yield return true;
+                    yield return null;
 
                 if (!ValidateBlockOnSameConstruct(block))
                     continue;
@@ -83,7 +83,7 @@ namespace PBScripts.Independent.AutoTurnOff
                 block.Enabled = false;
                 count++;
             }
-            yield return true;
+            yield return null;
 
             // Calculate
             unchecked { _total += count; }

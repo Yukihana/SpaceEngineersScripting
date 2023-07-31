@@ -1,7 +1,9 @@
 ﻿using Sandbox.ModAPI.Ingame;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using VRage.Scripting;
 
 namespace PBScripts.AddonModules
 {
@@ -23,6 +25,36 @@ namespace PBScripts.AddonModules
             return regex;
         }
 
+        private readonly List<IMyProgrammableBlock> _scriptCache = new List<IMyProgrammableBlock>();
+
+        public bool TryGetScript(string scriptId, string scriptType, out IMyProgrammableBlock script)
+        {
+            var scriptTag = $"[{scriptType}:{scriptId}]";
+            _scriptCache.Clear();
+            GridTerminalSystem.GetBlocksOfType(_scriptCache, x
+                => x.IsFunctional
+                && x.IsSameConstructAs(Me)
+                && x.CustomData.Contains(scriptTag));
+            var result = _scriptCache.Any();
+            script = result ? _scriptCache.First() : null;
+            return result;
+        }
+
+        public bool GetOutput(IMyProgrammableBlock script, string parameterName, out string result)
+        {
+            var regex = GetPollRegex(parameterName);
+            var sb = new StringBuilder();
+            script.GetSurface(0).ReadText(sb);
+            var data = sb.ToString();
+
+            System.Text.RegularExpressions.Match match = regex.Match(data);
+            result = match.Success ? match.Groups["value"].Value : string.Empty;
+            return match.Success;
+        }
+
+        // Obsolete Code
+
+        [Obsolete]
         public bool GetMonitorScript(string scriptId, out IMyProgrammableBlock script)
         {
             var scriptTag = $"[MonitorScript:{scriptId}]";
@@ -36,18 +68,7 @@ namespace PBScripts.AddonModules
             return result;
         }
 
-        public bool GetOutput(IMyProgrammableBlock script, string parameterName, out string result)
-        {
-            var regex = GetPollRegex(parameterName);
-            var sb = new StringBuilder();
-            script.GetSurface(1).ReadText(sb);
-            var data = sb.ToString();
-
-            System.Text.RegularExpressions.Match match = regex.Match(data);
-            result = match.Success ? match.Groups["value"].Value : string.Empty;
-            return match.Success;
-        }
-
+        [Obsolete]
         public bool GetOutput(IMyProgrammableBlock script, string parameterName, out float result)
         {
             var regex = GetPollRegex(parameterName);
