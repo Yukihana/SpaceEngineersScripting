@@ -36,13 +36,13 @@ namespace PBScripts.Cooperative.LifeSupport.SmartGreenhouse
         // Required
 
         private readonly Random _random = new Random();
-        private readonly TimeSpan INTERVAL_MINIMUM = TimeSpan.FromMinutes(1);
-        private readonly TimeSpan INTERVAL_MAXIMUM = TimeSpan.FromMinutes(2);
+        private readonly TimeSpan INTERVAL_MINIMUM = TimeSpan.FromMinutes(10);
+        private readonly TimeSpan INTERVAL_MAXIMUM = TimeSpan.FromMinutes(20);
 
         private readonly string IGNORE_MARKER = $"[{SCRIPT_ID}Ignore]";
         private const int BATCH_SIZE = 32;
 
-        private const float GRID_POWER_MINIMUM = 0.75f;
+        private const float GRID_POWER_MINIMUM = 0.5f;
         private const float GRID_OXYGEN_MAXIMUM = 0.98f;
         private const float EFFICIENCY_MINIMUM = 0.5f;
         private const float OXYFARM_MAX = 180f;
@@ -50,7 +50,8 @@ namespace PBScripts.Cooperative.LifeSupport.SmartGreenhouse
         private readonly Color Color1 = new Color(0f, 1f, 0.5f);
 
         private readonly List<IMyOxygenFarm> _farms = new List<IMyOxygenFarm>();
-        private readonly List<float> _efficiencies = new List<float>();
+        private readonly List<IMyOxygenFarm> _carryOver = new List<IMyOxygenFarm>();
+        private readonly List<float> _factors = new List<float>();
         private IMyProgrammableBlock _script;
         private ulong _evaluated = 0;
 
@@ -91,8 +92,8 @@ namespace PBScripts.Cooperative.LifeSupport.SmartGreenhouse
             GridTerminalSystem.GetBlocksOfType(_farms);
             yield return null;
 
-            // Evaluate
-            _efficiencies.Clear();
+            // Phase 1: Turn them on
+            _carryOver.Clear();
             foreach (IMyOxygenFarm farm in _farms)
             {
                 unchecked { _evaluated++; }
@@ -102,44 +103,61 @@ namespace PBScripts.Cooperative.LifeSupport.SmartGreenhouse
                 if (!ValidateBlockOnSameConstruct(farm, IGNORE_MARKER))
                     continue;
 
-                // Control by canFarm
-                count++;
-                if (!canFarm)
-                {
-                    farm.Enabled = false;
-                    continue;
-                }
-
-                // Control by Output
-                farm.Enabled = true;
-                var factor = farm.GetOutput();
-                if (factor < EFFICIENCY_MINIMUM)
-                {
-                    farm.Enabled = false;
-                    continue;
-                }
-
-                // Accumulate if farm is left enabled
-                activeCount++;
-                _efficiencies.Add(factor);
-                farmMaximum += OXYFARM_MAX;
-                farmCurrent += OXYFARM_MAX * factor;
+                farm.Enabled = canFarm;
+                _carryOver.Add(farm);
             }
+
+            // Wait 5 seconds for the farms to get upto speed
+            Runtime.UpdateFrequency = UpdateFrequency.Update100;
+            DateTime midPause = DateTime.UtcNow + TimeSpan.FromSeconds(5);
+            while (DateTime.UtcNow < midPause)
+                yield return null;
+            Runtime.UpdateFrequency = UpdateFrequency.Update10;
             yield return null;
+
+            // Phase 2: Evaluate by output
+            _factors.Clear();
+            if (canFarm)
+            {
+                foreach (IMyOxygenFarm farm in _carryOver)
+                {
+                    unchecked { _evaluated++; }
+                    if (_evaluated % BATCH_SIZE == 0)
+                        yield return null;
+
+                    if (!ValidateBlockOnSameConstruct(farm, IGNORE_MARKER))
+                        continue;
+
+                    count++;
+                    var factor = farm.GetOutput();
+                    if (factor < EFFICIENCY_MINIMUM)
+                    {
+                        farm.Enabled = false;
+                        continue;
+                    }
+
+                    // Accumulate if farm is left enabled
+                    activeCount++;
+                    _factors.Add(factor);
+                    farmMaximum += OXYFARM_MAX;
+                    farmCurrent += OXYFARM_MAX * factor;
+                }
+                yield return null;
+            }
 
             // Calculate
             var efficiency = farmMaximum > 0 ? farmCurrent / farmMaximum : 0;
 
             OutputStats["FarmingAllowed"] = canFarm.ToString();
-            OutputStats["ActivationThreshold"] = EFFICIENCY_MINIMUM.ToString();
             OutputStats["Efficiency"] = efficiency.ToString("0.###");
             OutputStats["EnabledFactor"] = (count > 0 ? activeCount / (float)count : 0).ToString("0.###");
 
+            OutputStats["OutputCurrent"] = farmCurrent.ToString("0.###") + " L/min";
+            OutputStats["OutputMaximum"] = farmMaximum.ToString("0.###") + " L/min";
             OutputStats["FarmsTotal"] = count.ToString();
             OutputStats["FarmsActive"] = activeCount.ToString();
-            OutputStats["OutputCurrent"] = farmCurrent.ToString("0.###") + " L";
-            OutputStats["OutputMaximum"] = farmMaximum.ToString("0.###") + " L";
 
+            OutputStats["ActivationThreshold"] = EFFICIENCY_MINIMUM.ToString();
             OutputStats["InputPowerFactor"] = (gridPowerFactor >= 0 ? gridPowerFactor : 0).ToString("0.###");
             OutputStats["InputOxygenFactor"] = gridOxygenFactor.ToString("0.###");
             OutputStats["UpdateGuid"] = _evaluated.ToString();
