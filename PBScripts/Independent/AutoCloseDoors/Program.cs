@@ -2,125 +2,126 @@
 using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using VRage.Game.GUI.TextPanel;
+using VRageMath;
 
 namespace PBScripts.Independent.AutoCloseDoors
 {
-    /// <summary>
-    /// Sample script that closes doors every 5 seconds.
-    /// If the door was opened less than 5 seconds ago,
-    /// it will wait an extra 5 seconds before closing it.
-    /// </summary>
     internal class Program : SEProgramBase
     {
+        private const string SCRIPT_ID = "AutoCloseDoors";
+
         public Program()
-        { Runtime.UpdateFrequency = UpdateFrequency.Update100; }
+        {
+            OutputTitle = $"Independent-{SCRIPT_ID}";
+            TagSelf("IndependentScript", SCRIPT_ID);
+            Runtime.UpdateFrequency = UpdateFrequency.Update100;
+        }
 
         public void Main()
         { CycleCoroutine(ref _enumerator, () => CloseDoors()); }
 
         private IEnumerator<object> _enumerator = null;
-        private readonly TimeSpan INTERVAL_MINIMUM = TimeSpan.FromSeconds(10);
-        private const int BATCH_SIZE = 16;
 
-        // Coroutine
+        // TagSelf
 
-        private readonly Dictionary<IMyDoor, DateTime> _pendingDoors = new Dictionary<IMyDoor, DateTime>();
+        // CycleCoroutine
+
+        // Validate
+
+        // ScriptOutput
+
+        // Required
+
+        private readonly Random _random = new Random();
+        private readonly TimeSpan INTERVAL_MINIMUM = TimeSpan.FromSeconds(5);
+        private readonly TimeSpan INTERVAL_MAXIMUM = TimeSpan.FromSeconds(10);
+
+        private readonly string IGNORE_MARKER = $"{SCRIPT_ID}Ignore";
+        private const int BATCH_SIZE = 32;
+
         private readonly TimeSpan DOOR_DELAY = TimeSpan.FromSeconds(20);
-        private const string IGNORE_MARKER = "AutoCloseIgnore";
+        private readonly Color Color0 = Color.Gray;
+        private readonly Color Color1 = new Color(0f, 1f, 0.25f);
+
+        private readonly List<IMyDoor> _doors = new List<IMyDoor>();
+        private readonly Dictionary<IMyDoor, DateTime> _pendingDoors = new Dictionary<IMyDoor, DateTime>();
+        private readonly Dictionary<IMyDoor, DateTime> _carryOver = new Dictionary<IMyDoor, DateTime>();
+        private uint _evaluated = 0;
+
+        // Routine
 
         private IEnumerator<object> CloseDoors()
         {
-            // Prepare
             DateTime startTime = DateTime.UtcNow;
-            uint evaluated = 0;
-            int count = 0, closedCount = 0;
+            Runtime.UpdateFrequency = UpdateFrequency.Update10;
+            int count = 0, closing = 0;
+            DateTime closeTime;
+            yield return null;
+
+            // Get doors
+            _doors.Clear();
+            GridTerminalSystem.GetBlocksOfType(_doors);
+            yield return null;
 
             // Enumerate
-            var doors = new List<IMyDoor>();
-            GridTerminalSystem.GetBlocksOfType(doors);
-            yield return null;
-
-            var carryOver = new List<IMyDoor>();
-            foreach (var door in doors)
+            foreach (var door in _doors)
             {
-                unchecked { evaluated++; }
+                unchecked { _evaluated++; }
+                if (_evaluated % BATCH_SIZE == 0)
+                    yield return null;
 
-                // Validate
-                if (!door.IsSameConstructAs(Me))
-                    continue;
-                if (!door.IsFunctional)
-                    continue;
-                if (!door.Enabled)
-                    continue;
-                if (door.CustomData.Contains($"[{IGNORE_MARKER}]"))
-                    continue;
-                if (door.BlockDefinition.SubtypeId.Contains("Hangar"))
-                    continue;
-                if (door.BlockDefinition.SubtypeId.Contains("Gate"))
+                if (!ValidateBlockOnSameConstruct(door, IGNORE_MARKER))
                     continue;
 
-                // Handle door
+                if (door.BlockDefinition.SubtypeId.Contains("Hangar") ||
+                    door.BlockDefinition.SubtypeId.Contains("Gate") ||
+                    door.BlockDefinition.SubtypeId.Contains("Hatch"))
+                    continue;
+
                 count++;
-                DateTime openedAt;
+                if (door.Status == DoorStatus.Closed)
+                    continue;
 
-                if (_pendingDoors.TryGetValue(door, out openedAt))
+                if (_pendingDoors.TryGetValue(door, out closeTime))
                 {
-                    // If already registered:
-                    // Carry over if time hasn't elapsed
-                    // and door hasn't been closed
-                    if (DateTime.UtcNow - openedAt < DOOR_DELAY &&
-                        door.Status != DoorStatus.Closed &&
-                        door.Status != DoorStatus.Closing)
-                        carryOver.Add(door);
-                    else
+                    _carryOver[door] = closeTime;
+
+                    if (closeTime < DateTime.UtcNow)
                     {
                         door.CloseDoor();
-                        closedCount++;
+                        closing++;
                     }
                 }
-                else if (door.Status == DoorStatus.Open || door.Status == DoorStatus.Opening)
-                {
-                    // If unregistered and open:
-                    // register it, and mark for carry over
-                    // Everything else, including invalidated, gets purged along the way
-                    _pendingDoors.Add(door, DateTime.UtcNow);
-                    carryOver.Add(door);
-                }
-
-                // Yield by batch
-                if (evaluated % BATCH_SIZE == 0)
-                    yield return null;
+                else
+                    _carryOver[door] = DateTime.UtcNow + DOOR_DELAY;
             }
+            yield return null;
 
             // Clean pending list
-            var toClear = _pendingDoors.Keys.Except(carryOver).ToList();
-            foreach (var key in toClear)
-                _pendingDoors.Remove(key);
+            _pendingDoors.Clear();
+            foreach (var item in _carryOver)
+                _pendingDoors[item.Key] = item.Value;
+            _carryOver.Clear();
             yield return null;
 
-            // Prepare stats
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine("[Independent:AutoCloseDoors]");
-            sb.AppendLine();
-            sb.AppendLine($"[GridPedestrianDoorsTotal:{count}]");
-            sb.AppendLine($"[GridPedestrianDoorsPending:{_pendingDoors.Count}]");
-            sb.AppendLine($"[GridPedestrianDoorsClosing:{closedCount}]");
-            string output = sb.ToString();
+            // Calculate
+            OutputStats["DoorsTotal"] = count.ToString();
+            OutputStats["DoorsPending"] = _pendingDoors.Count.ToString();
+            OutputStats["DoorsClosing"] = closing.ToString();
+            OutputStats["UpdateGuid"] = _evaluated.ToString();
+            OutputFontColor = _pendingDoors.Count > 0 ? Color1 : Color0;
             yield return null;
 
-            // Post stats
-            IMyTextSurface monitor = Me.GetSurface(0);
-            monitor.ContentType = ContentType.TEXT_AND_IMAGE;
-            monitor.FontColor = new VRageMath.Color(1f, 0f, 0.8f);
-            monitor.WriteText(output);
-            Me.CustomData = output;
+            // Output
+            DoManualOutput();
             yield return null;
 
-            // On early finish, wait for interval (No append randomization for doors)
-            while (DateTime.UtcNow - startTime < INTERVAL_MINIMUM)
+            // On early finish, wait for interval
+            Runtime.UpdateFrequency = UpdateFrequency.Update100;
+            DateTime waitTill = startTime + TimeSpan.FromSeconds(_random.Next(
+                (int)INTERVAL_MINIMUM.TotalSeconds,
+                (int)INTERVAL_MAXIMUM.TotalSeconds));
+            while (DateTime.UtcNow < waitTill)
                 yield return null;
         }
     }

@@ -11,7 +11,7 @@ namespace PBScripts.AddonModules
             int count = 0;
             foreach (var item in items)
             {
-                var parts = item.Split(new char[] { ':' }, 2, StringSplitOptions.RemoveEmptyEntries);
+                var parts = item.Split(new char[] { '=' }, 2, StringSplitOptions.RemoveEmptyEntries);
                 if (parts.Length == 0)
                     continue;
 

@@ -27,7 +27,7 @@ namespace PBScripts.Cooperative.LifeSupport.SmartGreenhouse
 
         // CycleCoroutine
 
-        // GetOutput
+        // TryGetOutput
 
         // Validate
 

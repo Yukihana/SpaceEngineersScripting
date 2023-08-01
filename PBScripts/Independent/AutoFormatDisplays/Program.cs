@@ -43,7 +43,10 @@ namespace PBScripts.Independent.AutoFormatDisplays
 
         private readonly string IGNORE_MARKER = $"[{SCRIPT_ID}Ignore]";
         private const int BATCH_SIZE = 4;
+
         private const string ParameterGroupIdentifier = "AutoFormatParameters";
+        private readonly Color Color0 = Color.Gray;
+        private readonly Color Color1 = Color.Cyan;
 
         private readonly List<IMyTextPanel> _panels = new List<IMyTextPanel>();
         private readonly Dictionary<IMyTextPanel, string> _customDatas = new Dictionary<IMyTextPanel, string>();
@@ -103,6 +106,7 @@ namespace PBScripts.Independent.AutoFormatDisplays
             OutputStats["UpdatesRecent"] = updates.ToString();
             OutputStats["UpdatesTotal"] = _updatesTotal.ToString();
             OutputStats["Errors"] = _errors.ToString();
+            OutputFontColor = updates > 0 ? Color1 : Color0;
             yield return null;
 
             // Output
