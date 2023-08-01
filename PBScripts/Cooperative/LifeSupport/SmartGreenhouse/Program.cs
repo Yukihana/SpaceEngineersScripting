@@ -69,7 +69,7 @@ namespace PBScripts.Cooperative.LifeSupport.SmartGreenhouse
             // Get current power storage factor (Defaults to max)
             float gridPowerFactor;
             if (!TryGetScript("GridPowerStorage", "MonitorScript", out _script) ||
-                !GetOutput(_script, "FilledFactor", out valueString) ||
+                !TryGetOutput(_script, "FilledFactor", out valueString) ||
                 !float.TryParse(valueString, out gridPowerFactor))
                 gridPowerFactor = 1f; // Set default: Max
             yield return null;
@@ -77,7 +77,7 @@ namespace PBScripts.Cooperative.LifeSupport.SmartGreenhouse
             // Get current oxygen storage factor (Defaults to min)
             float gridOxygenFactor;
             if (!TryGetScript("GridOxygenStorage", "MonitorScript", out _script) ||
-                !GetOutput(_script, "FilledFactor", out valueString) ||
+                !TryGetOutput(_script, "FilledFactor", out valueString) ||
                 !float.TryParse(valueString, out gridOxygenFactor))
                 gridOxygenFactor = 0f;
             yield return null;

@@ -29,9 +29,9 @@ namespace PBScripts.Independent.AutoFormatDisplays
 
         // Validate
 
-        // GetParameter
+        // TryGetMetadata
 
-        // ParseParameters
+        // ParsePackedParameters
 
         // ScriptOutput
 
@@ -87,7 +87,7 @@ namespace PBScripts.Independent.AutoFormatDisplays
 
                 _customDatas[panel] = customData;
                 _panelParameters.Clear();
-                if (TryGetBlockParameter(panel, ParameterGroupIdentifier, out customData) &&
+                if (TryGetMetadata(panel, ParameterGroupIdentifier, out customData) &&
                     ParsePackedParameters(customData, _panelParameters, true) > 0)
                 {
                     updates += ApplyProperties(panel, _panelParameters);

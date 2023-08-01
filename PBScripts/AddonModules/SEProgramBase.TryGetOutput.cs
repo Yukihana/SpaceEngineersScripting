@@ -40,7 +40,7 @@ namespace PBScripts.AddonModules
             return result;
         }
 
-        public bool GetOutput(IMyProgrammableBlock script, string parameterName, out string result)
+        public bool TryGetOutput(IMyProgrammableBlock script, string parameterName, out string result)
         {
             var regex = GetPollRegex(parameterName);
             var sb = new StringBuilder();

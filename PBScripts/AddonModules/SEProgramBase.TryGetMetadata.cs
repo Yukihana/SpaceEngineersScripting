@@ -4,7 +4,7 @@ namespace PBScripts.AddonModules
 {
     internal partial class SEProgramBase
     {
-        public bool TryGetBlockParameter(IMyTerminalBlock block, string key, out string value)
+        public bool TryGetMetadata(IMyTerminalBlock block, string key, out string value)
         {
             string pattern = @"\[" + System.Text.RegularExpressions.Regex.Escape(key) + @":(?<value>.*?)\]";
             System.Text.RegularExpressions.Match match

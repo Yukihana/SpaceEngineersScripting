@@ -64,7 +64,7 @@ namespace PBScripts.Cooperative.Maintenance.JumpDriveCharger
             // Get current power storage factor (Defaults to max)
             float gridPowerFactor;
             if (!TryGetScript("GridPowerStorage", "MonitorScript", out _script) ||
-                !GetOutput(_script, "FilledFactor", out valueString) ||
+                !TryGetOutput(_script, "FilledFactor", out valueString) ||
                 !float.TryParse(valueString, out gridPowerFactor))
                 gridPowerFactor = 1f; // Set default: Max
             yield return null;
