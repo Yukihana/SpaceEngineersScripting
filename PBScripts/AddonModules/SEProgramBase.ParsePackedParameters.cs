@@ -5,20 +5,23 @@ namespace PBScripts.AddonModules
 {
     internal partial class SEProgramBase
     {
-        public int ParsePackedParameters(string blob, Dictionary<string, string> parameters, bool toLower = false)
+        private readonly char[] PARAM_SEPARATORS = new[] { ';' };
+        private readonly char[] PARAM_SPLITTERS = new[] { '=' };
+
+        public int ParsePackedParameters(string blob, Dictionary<string, string> parameters, bool lowerCaseKeys = false)
         {
-            var items = blob.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+            var items = blob.Split(PARAM_SEPARATORS, StringSplitOptions.RemoveEmptyEntries);
             int count = 0;
             foreach (var item in items)
             {
-                var parts = item.Split(new char[] { '=' }, 2, StringSplitOptions.RemoveEmptyEntries);
+                var parts = item.Split(PARAM_SPLITTERS, 2, StringSplitOptions.RemoveEmptyEntries);
                 if (parts.Length == 0)
                     continue;
 
                 string key = parts[0];
                 string value = parts.Length > 1 ? parts[1] : string.Empty;
 
-                parameters[toLower ? key.ToLowerInvariant() : key] = value;
+                parameters[lowerCaseKeys ? key.ToLowerInvariant().Trim() : key] = value.Trim();
                 count++;
             }
             return count;
