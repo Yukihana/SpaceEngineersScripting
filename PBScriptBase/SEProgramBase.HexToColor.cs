@@ -2,9 +2,9 @@
 using System.Linq;
 using VRageMath;
 
-namespace PBScripts.AddonModules
+namespace PBScriptBase
 {
-    internal partial class SEProgramBase
+    public partial class SEProgramBase
     {
         [Obsolete("Use VRageMath.ColorExtensions.HexToColor as it already exists in the game.")]
         public static Color ToColor(string hex)

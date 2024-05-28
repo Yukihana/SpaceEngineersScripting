@@ -1,4 +1,4 @@
-﻿using PBScripts.AddonModules;
+﻿using PBScriptBase;
 using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
@@ -7,7 +7,7 @@ using VRageMath;
 
 namespace PBScripts.Independent.AutoFormatDisplays
 {
-    internal class Program : SEProgramBase
+    public partial class Program : SEProgramBase
     {
         private const string SCRIPT_ID = "AutoFormatDisplays";
 
@@ -91,7 +91,7 @@ namespace PBScripts.Independent.AutoFormatDisplays
                 _customDatas[panel] = customData;
                 _panelParameters.Clear();
                 if (TryGetMetadata(panel, ParameterGroupIdentifier, out customData) &&
-                    ParsePackedParameters(customData, _panelParameters, true) > 0)
+                    ParseArguments(customData, _panelParameters, true) > 0)
                 {
                     updates += ApplyProperties(panel, _panelParameters);
                     recent++;

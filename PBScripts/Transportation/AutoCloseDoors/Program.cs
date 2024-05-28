@@ -1,12 +1,12 @@
-﻿using PBScripts.AddonModules;
+﻿using PBScriptBase;
 using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
 using VRageMath;
 
-namespace PBScripts.Independent.AutoCloseDoors
+namespace PBScripts.Transportation.AutoCloseDoors
 {
-    internal class Program : SEProgramBase
+    public partial class Program : SEProgramBase
     {
         private const string SCRIPT_ID = "AutoCloseDoors";
 

@@ -5,9 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using VRageMath;
 
-namespace PBScripts.AddonModules
+namespace PBScriptBase
 {
-    internal partial class SEProgramBase
+    public partial class SEProgramBase
     {
         public static bool TryClampF(ref float value, float min, float max)
         {

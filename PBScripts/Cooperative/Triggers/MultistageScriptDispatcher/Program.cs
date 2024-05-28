@@ -1,12 +1,12 @@
-﻿using PBScripts.AddonModules;
+﻿using PBScriptBase;
 using Sandbox.ModAPI.Ingame;
 using System.Collections.Generic;
 using System.Linq;
 using VRage.Game.GUI.TextPanel;
 
-namespace PBScripts.Cooperative.Triggers.CommandDispatcher
+namespace PBScripts.Cooperative.Triggers.MultistageScriptDispatcher
 {
-    internal class Program : SEProgramBase
+    public partial class Program : SEProgramBase
     {
         private const string ERROR_NONAME = "Target script's name wasn't provided in the arguments. Use format `scriptname:args`.";
         private const string ERROR_NOTARGET = "Please make sure the target script's custom data contains `[[MultistageScript:ScriptName]]`.";

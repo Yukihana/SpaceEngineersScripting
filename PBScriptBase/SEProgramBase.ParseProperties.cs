@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 
-namespace PBScripts.AddonModules
+namespace PBScriptBase
 {
-    internal partial class SEProgramBase
+    public partial class SEProgramBase
     {
         private const string PROPERTY_PATTERN = @"\[(?<identifier>[^:]+):(?<value>[^\]]+)\]";
 

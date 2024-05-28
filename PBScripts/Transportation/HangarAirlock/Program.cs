@@ -4,9 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PBScripts.Cooperative.Triggers.DockedEventDispatcher
+namespace PBScripts.Transportation.HangarAirlock
 {
-    public partial class Program
+    /// <summary>
+    ///
+    /// </summary>
+    internal class Program
     {
     }
 }

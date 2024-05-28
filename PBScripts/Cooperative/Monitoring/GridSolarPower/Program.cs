@@ -1,4 +1,4 @@
-﻿using PBScripts.AddonModules;
+﻿using PBScriptBase;
 using Sandbox.ModAPI.Ingame;
 using SpaceEngineers.Game.ModAPI;
 using System;
@@ -7,9 +7,9 @@ using System.Linq;
 using VRage.Game;
 using VRageMath;
 
-namespace PBScripts.Monitoring.GridSolarPower
+namespace PBScripts.Cooperative.Monitoring.GridSolarPower
 {
-    internal class Program : SEProgramBase
+    public partial class Program : SEProgramBase
     {
         private const string SCRIPT_ID = "GridSolarPowerIntake";
 

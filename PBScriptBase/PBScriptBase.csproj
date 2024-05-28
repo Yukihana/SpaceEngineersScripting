@@ -9,10 +9,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\PBScriptBase\PBScriptBase.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Reference Include="Sandbox.Common">
       <HintPath>..\SEFiles\Sandbox.Common.dll</HintPath>
     </Reference>
@@ -55,10 +51,6 @@
     <Reference Include="VRage.Scripting">
       <HintPath>..\SEFiles\VRage.Scripting.dll</HintPath>
     </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Cooperative\Transportation\" />
   </ItemGroup>
 
 </Project>

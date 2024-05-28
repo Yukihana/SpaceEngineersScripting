@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace PBScripts.AddonModules
+namespace PBScriptBase
 {
-    internal partial class SEProgramBase
+    public partial class SEProgramBase
     {
         public void CycleCoroutine(ref IEnumerator<object> enumerator, Func<IEnumerator<object>> enumeratorFactory, bool reset = false)
         {

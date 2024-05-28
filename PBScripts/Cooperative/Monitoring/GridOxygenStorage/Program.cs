@@ -1,4 +1,4 @@
-﻿using PBScripts.AddonModules;
+﻿using PBScriptBase;
 using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
@@ -6,7 +6,7 @@ using VRageMath;
 
 namespace PBScripts.Cooperative.Monitoring.GridOxygenStorage
 {
-    internal class Program : SEProgramBase
+    public partial class Program : SEProgramBase
     {
         private const string SCRIPT_ID = "GridOxygenStorage";
 

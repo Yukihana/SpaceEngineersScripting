@@ -1,12 +1,13 @@
-﻿using PBScripts.AddonModules;
+﻿using PBScriptBase;
 using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using VRageMath;
 
 namespace PBScripts.LegacyScripts.LcdApplyProperty
 {
-    internal class Program : SEProgramBase
+    public partial class Program : SEProgramBase
     {
         // Run
 
@@ -91,13 +92,13 @@ namespace PBScripts.LegacyScripts.LcdApplyProperty
 
         private void SetFontColor(IMyTextPanel panel, string colorHex)
         {
-            try { panel.FontColor = ToColor(colorHex); }
+            try { panel.FontColor = ColorExtensions.HexToColor(colorHex); }
             catch { Echo($"Failed: FontColor-{colorHex}"); }
         }
 
         private void SetBackgroundColor(IMyTextPanel panel, string colorHex)
         {
-            try { panel.BackgroundColor = ToColor(colorHex); }
+            try { panel.BackgroundColor = ColorExtensions.HexToColor(colorHex); }
             catch { Echo($"Failed: BackgroundColor-{colorHex}"); }
         }
 

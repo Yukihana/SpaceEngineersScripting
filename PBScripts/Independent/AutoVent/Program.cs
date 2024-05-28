@@ -1,4 +1,4 @@
-﻿using PBScripts.AddonModules;
+﻿using PBScriptBase;
 using Sandbox.ModAPI.Ingame;
 using SpaceEngineers.Game.ModAPI;
 using System;
@@ -9,7 +9,7 @@ namespace PBScripts.Independent.AutoVent
 {
     // AutoVent
     // This script should not have a fixed minimum interval
-    internal class Program : SEProgramBase
+    public partial class Program : SEProgramBase
     {
         private const string SCRIPT_ID = "AutoVent";
 

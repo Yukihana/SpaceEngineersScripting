@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace PBScripts.AddonModules
+namespace PBScriptBase
 {
-    internal partial class SEProgramBase
+    public partial class SEProgramBase
     {
         public void TagSelf(string tag)
         {

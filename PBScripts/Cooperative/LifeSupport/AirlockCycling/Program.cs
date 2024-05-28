@@ -1,4 +1,4 @@
-﻿using PBScripts.AddonModules;
+﻿using PBScriptBase;
 using Sandbox.ModAPI.Ingame;
 using SpaceEngineers.Game.ModAPI.Ingame;
 using System;
@@ -8,7 +8,7 @@ using VRageMath;
 
 namespace PBScripts.Cooperative.LifeSupport.AirlockCycling
 {
-    internal class Program : SEProgramBase
+    public partial class Program : SEProgramBase
     {
         public Program()
         { TagSelf("MultistageScript:AirlockCycling"); }

@@ -9,10 +9,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\PBScriptBase\PBScriptBase.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Reference Include="Sandbox.Common">
       <HintPath>..\SEFiles\Sandbox.Common.dll</HintPath>
     </Reference>
@@ -58,7 +54,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Cooperative\Transportation\" />
+    <Folder Include="Core\MessageBus\" />
+    <Folder Include="Core\Runner\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PBScriptBase\PBScriptBase.csproj" />
   </ItemGroup>
 
 </Project>

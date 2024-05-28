@@ -1,13 +1,14 @@
-﻿using PBScripts.AddonModules;
+﻿using PBScriptBase;
 using Sandbox.ModAPI.Ingame;
 using System.Collections.Generic;
 using System;
 using System.Text;
 using VRage.Game.ModAPI.Ingame;
+using VRage.Game.GUI.TextPanel;
 
-namespace PBScripts.DataPolling.PollIntegrity
+namespace PBScripts.Cooperative.Monitoring.PollIntegrity
 {
-    internal class Program : SEProgramBase
+    public partial class Program : SEProgramBase
     {
         public Program()
         { Runtime.UpdateFrequency = UpdateFrequency.Update100; }
@@ -50,7 +51,7 @@ namespace PBScripts.DataPolling.PollIntegrity
             while (pendingCubes.Count > 0)
             {
                 IMyCubeBlock currentBlock = pendingCubes.FirstElement();
-                var adjacent = currentBlock.GetAdjacent();
+                var adjacent = GetAdjacent(currentBlock);
                 foreach (var block in adjacent)
                 {
                     if (!allCubes.Contains(block))
@@ -70,9 +71,9 @@ namespace PBScripts.DataPolling.PollIntegrity
 
             sb.AppendLine($"[PolledStatistics:GridOxygen]");
             sb.AppendLine();
-            sb.AppendLine($"[GridOxygenStored:{storedOxygen}]");
-            sb.AppendLine($"[GridOxygenMaximum:{maxOxygen}]");
-            sb.AppendLine($"[GridOxygenFactor:{oxygenPercent}]");
+            //sb.AppendLine($"[GridOxygenStored:{storedOxygen}]");
+            //sb.AppendLine($"[GridOxygenMaximum:{maxOxygen}]");
+            //sb.AppendLine($"[GridOxygenFactor:{oxygenPercent}]");
             sb.AppendLine($"[GridOxygenTankCount:{count}]");
             string output = sb.ToString();
             yield return null;
@@ -95,6 +96,11 @@ namespace PBScripts.DataPolling.PollIntegrity
             TimeSpan randomInterval = TimeSpan.FromSeconds(_random.Next(0, INTERVAL_APPENDED_MAXIMUM));
             while (DateTime.UtcNow - startTime < randomInterval)
                 yield return null;
+        }
+
+        private IEnumerable<IMyCubeBlock> GetAdjacent(IMyCubeBlock currentBlock)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using VRage.Scripting;
 
-namespace PBScripts.AddonModules
+namespace PBScriptBase
 {
-    internal partial class SEProgramBase
+    public partial class SEProgramBase
     {
         private readonly Dictionary<string, System.Text.RegularExpressions.Regex> _parameterRegex
             = new Dictionary<string, System.Text.RegularExpressions.Regex>();

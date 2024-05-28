@@ -1,8 +1,8 @@
 ﻿using Sandbox.ModAPI.Ingame;
 
-namespace PBScripts.AddonModules
+namespace PBScriptBase
 {
-    internal partial class SEProgramBase
+    public partial class SEProgramBase
     {
         public bool TryGetMetadata(IMyTerminalBlock block, string key, out string value)
         {

@@ -1,4 +1,4 @@
-﻿using PBScripts.AddonModules;
+﻿using PBScriptBase;
 using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
@@ -6,9 +6,9 @@ using System.Linq;
 using VRage.Game.VisualScripting.Utils;
 using VRageMath;
 
-namespace PBScripts.Independent.DockingHandler
+namespace PBScripts.Transportation.DockingHandler
 {
-    internal class Program : SEProgramBase
+    public partial class Program : SEProgramBase
     {
         private const string SCRIPT_ID = "DockingHandler";
 

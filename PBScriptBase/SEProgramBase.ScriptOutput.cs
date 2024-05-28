@@ -5,12 +5,12 @@ using System.Text;
 using VRage.Game.GUI.TextPanel;
 using VRageMath;
 
-namespace PBScripts.AddonModules
+namespace PBScriptBase
 {
     // Surface0 : Stats
     // Do not use Me.CustomData in this script.
 
-    internal partial class SEProgramBase
+    public partial class SEProgramBase
     {
         public string OutputTitle = "Untitled";
         public TimeSpan OutputInterval = TimeSpan.FromSeconds(11);

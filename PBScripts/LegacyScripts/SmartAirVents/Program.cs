@@ -1,4 +1,4 @@
-﻿using PBScripts.AddonModules;
+﻿using PBScriptBase;
 using Sandbox.ModAPI.Ingame;
 using SpaceEngineers.Game.ModAPI;
 using System.Collections.Generic;
@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace PBScripts.LegacyScripts.SmartAirVents
 {
-    internal class Program : SEProgramBase
+    public partial class Program : SEProgramBase
     {
         private struct AirVentInfo
         {

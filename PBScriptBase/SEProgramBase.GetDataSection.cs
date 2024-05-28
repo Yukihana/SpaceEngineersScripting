@@ -2,10 +2,11 @@
 using System;
 using System.Collections.Generic;
 
-namespace PBScripts.AddonModules
+namespace PBScriptBase
 {
-    internal partial class SEProgramBase
+    public partial class SEProgramBase
     {
+        [Obsolete("Use ParseCookies instead. More robust rules.")]
         public Dictionary<string, string> GetDataSection(IMyTerminalBlock terminalBlock, string section)
         {
             string[] lines = terminalBlock.CustomData.Split(new string[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);

@@ -1,4 +1,4 @@
-﻿using PBScripts.AddonModules;
+﻿using PBScriptBase;
 using Sandbox.ModAPI.Ingame;
 using SpaceEngineers.Game.ModAPI.Ingame;
 using System;
@@ -7,7 +7,7 @@ using VRageMath;
 
 namespace PBScripts.Cooperative.LifeSupport.SmartGreenhouse
 {
-    internal class Program : SEProgramBase
+    public partial class Program : SEProgramBase
     {
         private const string SCRIPT_ID = "SmartGreenhouse";
 

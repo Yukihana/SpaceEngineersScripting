@@ -5,12 +5,12 @@ using System.Text;
 using VRage.Game.GUI.TextPanel;
 using VRageMath;
 
-namespace PBScripts.AddonModules
+namespace PBScriptBase
 {
     // Surface1 : Config
     // Do not use Me.CustomData in this script.
 
-    internal partial class SEProgramBase
+    public partial class SEProgramBase
     {
         public readonly Color InputFontColor = new Color(1f, 1f, 0f);
         public bool IsConfigUnsaved = false;

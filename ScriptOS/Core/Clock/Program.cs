@@ -4,9 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace PBScripts.Cooperative.Triggers.DockedEventDispatcher
+namespace ScriptOS.Core.Clock
 {
-    public partial class Program
+    // Will handle all pb triggering manually.
+    public sealed class Program
     {
     }
 }

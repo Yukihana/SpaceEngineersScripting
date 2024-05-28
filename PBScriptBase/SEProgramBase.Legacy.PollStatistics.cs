@@ -1,9 +1,9 @@
 ﻿using Sandbox.ModAPI.Ingame;
 using System.Collections.Generic;
 
-namespace PBScripts.AddonModules
+namespace PBScriptBase
 {
-    internal partial class SEProgramBase
+    public partial class SEProgramBase
     {
         public readonly List<string> statistics = new List<string>();
 

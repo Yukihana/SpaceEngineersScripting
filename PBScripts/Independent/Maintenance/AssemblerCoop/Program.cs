@@ -1,11 +1,11 @@
-﻿using PBScripts.AddonModules;
+﻿using PBScriptBase;
 using Sandbox.ModAPI.Ingame;
 using System.Collections.Generic;
 using VRageMath;
 
 namespace PBScripts.Independent.Maintenance.AssemblerCoop
 {
-    internal class Program : SEProgramBase
+    public partial class Program : SEProgramBase
     {
         private const string SCRIPT_ID = "AssemblerCoop";
 
@@ -27,9 +27,9 @@ namespace PBScripts.Independent.Maintenance.AssemblerCoop
 
             if (!isAuto && !string.IsNullOrWhiteSpace(argument))
             {
-                ParseArguments(argument);
+                var arguments = ParseArguments(argument);
                 string enabledString;
-                if (Arguments.TryGetValue("mode", out enabledString) &&
+                if (arguments.TryGetValue("mode", out enabledString) &&
                     enabledString.ToLowerInvariant() == "independent")
                     enable = false;
             }
@@ -64,7 +64,7 @@ namespace PBScripts.Independent.Maintenance.AssemblerCoop
         private ulong _evaluated = 0;
         private readonly List<IMyAssembler> _assemblers = new List<IMyAssembler>();
 
-        // Main Routine
+        // Primary Routine
 
         private IEnumerator<object> MarkAssemblersToCooperate(bool enable = true)
         {
