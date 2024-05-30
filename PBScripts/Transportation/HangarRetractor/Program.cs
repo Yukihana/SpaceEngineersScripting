@@ -13,7 +13,7 @@ namespace PBScripts.Transportation.SmartRetractor
     public partial class Program : SEProgramBase
     {
         public Program()
-        { TagSelf("MultistageScript:HangarControls"); }
+        { TagSelf("Cooperative:SmartRetractor"); }
 
         public void Main(string argument, UpdateType updateSource)
         {
@@ -28,7 +28,9 @@ namespace PBScripts.Transportation.SmartRetractor
                 ProcessInput(argument);
         }
 
-        // Segment : Parse Arguments
+        // [Segment:TagSelf]
+
+        // [Segment:ParseArguments]
 
         // Input
 
@@ -46,9 +48,6 @@ namespace PBScripts.Transportation.SmartRetractor
         }
 
         // Queueing
-
-        private readonly Dictionary<string, IEnumerator<object>> _enumerators
-            = new Dictionary<string, IEnumerator<object>>();
 
         private void QueueHangar(string identifier, string mode = "")
         {

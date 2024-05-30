@@ -34,7 +34,7 @@ namespace PBScripts.Independent.Maintenance.AssemblerCoop
                     enable = false;
             }
 
-            bool canContinue = RunCoroutine(ref _enumerator, () => MarkAssemblersToCooperate(enable), !isAuto);
+            bool canContinue = RunCoroutineEx(ref _enumerator, () => MarkAssemblersToCooperate(enable), !isAuto);
             Runtime.UpdateFrequency = canContinue ? UpdateFrequency.Update10 : UpdateFrequency.None;
         }
 

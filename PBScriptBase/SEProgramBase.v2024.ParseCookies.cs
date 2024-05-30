@@ -24,12 +24,12 @@ namespace PBScriptBase
 
         public static int ParseCookies(string input, Dictionary<string, string> existing)
         {
-            StringBuilder currentKey = new StringBuilder();
-            StringBuilder currentValue = new StringBuilder();
+            StringBuilder buffer = new StringBuilder();
             bool isComment = true;
             bool isKey = true;
             int count = 0;
 
+            string key = null;
             bool escaping = false;
             foreach (char c in input)
             {
@@ -51,37 +51,47 @@ namespace PBScriptBase
                     }
                     continue;
                 }
-                else if (c == ']')
+                else if (isComment)
                 {
-                    string key = currentKey.ToString().Trim();
-                    currentKey.Clear();
-
-                    if (!string.IsNullOrEmpty(key))
-                    {
-                        string value = currentValue.ToString().Trim();
-                        currentValue.Clear();
-                        existing[key] = string.IsNullOrEmpty(value) ? null : value;
-                        count++;
-                    }
-
-                    isComment = true;
-                    currentKey.Clear();
-                    currentValue.Clear();
+                    // enders need non comments, so optimize this
                     continue;
                 }
                 else if (c == ':')
                 {
-                    isKey = false;
+                    if (isKey)
+                    {
+                        key = buffer.ToString();
+                        buffer.Clear();
+
+                        key = key.Trim();
+                        if (string.IsNullOrWhiteSpace(key))
+                            key = null;
+
+                        isKey = false;
+                    }
+                    continue;
+                }
+                else if (c == ']')
+                {
+                    string str = buffer.ToString();
+                    buffer.Clear();
+
+                    str = str.Trim();
+                    if (string.IsNullOrWhiteSpace(str))
+                        str = null;
+
+                    if (isKey)
+                        existing[str] = null;
+                    else if (!string.IsNullOrEmpty(key))
+                        existing[key] = str;
+
+                    isComment = true;
+                    buffer.Clear();
                     continue;
                 }
 
                 if (!isComment)
-                {
-                    if (isKey)
-                        currentKey.Append(c);
-                    else
-                        currentValue.Append(c);
-                }
+                    buffer.Append(c);
             }
 
             return count;

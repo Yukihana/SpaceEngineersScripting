@@ -6,12 +6,12 @@ using System.Collections.Generic;
 using System.Linq;
 using VRageMath;
 
-namespace PBScripts.Cooperative.LifeSupport.AirlockCycling
+namespace PBScripts.Transportation.AirlockCycling
 {
     public partial class Program : SEProgramBase
     {
         public Program()
-        { TagSelf("MultistageScript:AirlockCycling"); }
+        { TagSelf("Script:AirlockCycling"); }
 
         public void Main(string argument, UpdateType updateSource)
         {
@@ -106,7 +106,7 @@ namespace PBScripts.Cooperative.LifeSupport.AirlockCycling
             // Phase 0A : Get
             string requiredTag = $"[AirlockComponent:{identifier}]";
             var blocks = new List<IMyTerminalBlock>();
-            GridTerminalSystem.GetBlocksOfType<IMyTerminalBlock>(blocks, x => Validate(x, requiredTag));
+            GridTerminalSystem.GetBlocksOfType(blocks, x => Validate(x, requiredTag));
             yield return null;
 
             // Phase 0B : Sort and check if critical components are available

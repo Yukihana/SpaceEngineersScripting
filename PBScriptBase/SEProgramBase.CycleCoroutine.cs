@@ -5,6 +5,9 @@ namespace PBScriptBase
 {
     public partial class SEProgramBase
     {
+        public readonly Dictionary<string, IEnumerator<object>> _enumerators
+            = new Dictionary<string, IEnumerator<object>>();
+
         public void CycleCoroutine(ref IEnumerator<object> enumerator, Func<IEnumerator<object>> enumeratorFactory, bool reset = false)
         {
             if (enumerator == null)
@@ -16,7 +19,8 @@ namespace PBScriptBase
             }
         }
 
-        public bool RunCoroutine(ref IEnumerator<object> enumerator, Func<IEnumerator<object>> enumeratorFactory, bool reset = false)
+        [Obsolete]
+        public bool RunCoroutineEx(ref IEnumerator<object> enumerator, Func<IEnumerator<object>> enumeratorFactory, bool reset = false)
         {
             if (reset)
             {

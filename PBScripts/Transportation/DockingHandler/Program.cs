@@ -26,7 +26,7 @@ namespace PBScripts.Transportation.DockingHandler
 
             if (_task != null || changed)
             {
-                RunCoroutine(ref _task, () => HandleDocking(_connectedLast.Any()), changed);
+                RunCoroutineEx(ref _task, () => HandleDocking(_connectedLast.Any()), changed);
                 Runtime.UpdateFrequency = UpdateFrequency.Update10;
             }
 
